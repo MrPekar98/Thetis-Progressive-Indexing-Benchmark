@@ -1,3 +1,6 @@
 Jazero/
 SemanticTableSearchDataset/
 vectors.txt
+jdlc_cmd
+neo4j_data/
+neo4j_plugins/

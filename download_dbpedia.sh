@@ -21,6 +21,7 @@ done < ${KG_LIST_FILE}
 
 echo
 echo "Decompressing files"
+
 for KG_FILE in ${KG_DIR}* ;\
 do
     bzip2 -dk ${KG_FILE}

@@ -21,10 +21,31 @@ unzip embeddings.zip
 rm embeddings.zip
 ```
 
-Download DBpedia.
+Download the benchmark and the DBpedia KG.
 
 ```bash
+git clone https://github.com/EDAO-Project/SemanticTableSearchDataset.git
 ./download_dbpedia.sh SemanticTableSearchDataset/dbpedia_files.txt
+```
+
+TODO: Start script to generate entity mappings
+Start a Neo4J instance in which we will load the DBpedia KG.
+
+```bash
+mkdir -p neo4j_data/ neo4j_plugins/
+docker run -d \
+    --restart always \
+    --publish=7474:7474 --publish=7687:7687 \
+    --env NEO4J_AUTH=neo4j/12345678 \
+    --env NEO4J_PLUGINS='["apoc", "n10s"]' \
+    --volume=${PWD}/neo4j_data/:/data \
+    --volume=${PWD}/neo4j_plugins/:/plugins \
+    --volume=${PWD}/Jazero/kg/:/kg \
+    --name benchmark_neo4j \
+    neo4j:5.5.0
+sleep 10s
+docker cp import_dbpedia.sh benchmark_neo4j:/var/lib/neo4j
+docker exec -it benchmark_neo4j bash -c './import_dbpedia.sh'
 ```
 
 TODO: Add here the instructions to substitute the entity linker.
@@ -58,12 +79,6 @@ docker exec jazero_neo4j /scripts/import.sh . /kg
 ```
 
 ### Setting Up Table Search Benchmark
-Download the benchmark for semantic table search.
-
-```bash
-git clone https://github.com/EDAO-Project/SemanticTableSearchDataset.git
-```
-
 Run the following list of commands to properly unpack the downloaded benchmark.
 
 ```bash
