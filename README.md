@@ -28,7 +28,6 @@ git clone https://github.com/EDAO-Project/SemanticTableSearchDataset.git
 ./download_dbpedia.sh SemanticTableSearchDataset/dbpedia_files.txt
 ```
 
-TODO: Start script to generate entity mappings
 Start a Neo4J instance in which we will load the DBpedia KG.
 
 ```bash
@@ -48,6 +47,7 @@ docker cp import_dbpedia.sh benchmark_neo4j:/var/lib/neo4j
 docker exec -it benchmark_neo4j bash -c './import_dbpedia.sh'
 ```
 
+TODO: Start script to generate entity mappings
 TODO: Add here the instructions to substitute the entity linker.
 
 Start Jazero.

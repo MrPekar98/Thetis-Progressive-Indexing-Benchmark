@@ -19,6 +19,6 @@ echo "Importing the data"
 for FILE in ${NEO4J_IMPORT} ;\
 do
     FILENAME="$(basename "${FILE}")"
-    ${NEO4J_HOME}/neo4j-server/bin/cypher-shell -u neo4j -p 'admin' "CALL n10s.rdf.import.fetch(\"file://${NEO4J_IMPORT}/${FILENAME}\",\"Turtle\");"
+    ${NEO4J_HOME}bin/cypher-shell -u neo4j -p 'admin' "CALL n10s.rdf.import.fetch(\"file://${NEO4J_IMPORT}/${FILENAME}\",\"Turtle\");"
     rm ${FILE}
 done
