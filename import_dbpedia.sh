@@ -6,6 +6,10 @@ NEO4J_HOME="/var/lib/neo4j/"
 NEO4J_IMPORT="${NEO4J_HOME}import"
 KG_DIR="/kg/"
 
+echo "Creating index"
+${NEO4J_HOME}/bin/cypher-shell -u neo4j -p '12345678' "CREATE CONSTRAINT n10s_unique_uri ON (r:Resource) ASSERT r.uri IS UNIQUE;"
+${NEO4J_HOME}/bin/cypher-shell -u neo4j -p '12345678' 'call n10s.graphconfig.init( { handleMultival: "OVERWRITE",  handleVocabUris: "SHORTEN", keepLangTag: false, handleRDFTypes: "NODES" })'
+
 echo "Cleaning the data"
 
 for FILE in ${KG_DIR}*ttl ;\
@@ -19,6 +23,6 @@ echo "Importing the data"
 for FILE in ${NEO4J_IMPORT} ;\
 do
     FILENAME="$(basename "${FILE}")"
-    ${NEO4J_HOME}bin/cypher-shell -u neo4j -p 'admin' "CALL n10s.rdf.import.fetch(\"file://${NEO4J_IMPORT}/${FILENAME}\",\"Turtle\");"
+    ${NEO4J_HOME}bin/cypher-shell -u neo4j -p '12345678' "CALL n10s.rdf.import.fetch(\"file://${NEO4J_IMPORT}/${FILENAME}\",\"Turtle\");"
     rm ${FILE}
 done
