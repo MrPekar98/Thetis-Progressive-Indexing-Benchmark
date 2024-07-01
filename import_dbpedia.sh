@@ -3,7 +3,7 @@
 set -e
 
 NEO4J_HOME="/var/lib/neo4j/"
-NEO4J_IMPORT="${NEO4J_HOME}import"
+NEO4J_IMPORT="${NEO4J_HOME}import/"
 KG_DIR="/kg/"
 
 echo "Creating index"
@@ -20,7 +20,7 @@ done
 
 echo "Importing the data"
 
-for FILE in ${NEO4J_IMPORT} ;\
+for FILE in ${NEO4J_IMPORT}*ttl ;\
 do
     FILENAME="$(basename "${FILE}")"
     ${NEO4J_HOME}bin/cypher-shell -u neo4j -p '12345678' "CALL n10s.rdf.import.fetch(\"file://${NEO4J_IMPORT}/${FILENAME}\",\"Turtle\");"
