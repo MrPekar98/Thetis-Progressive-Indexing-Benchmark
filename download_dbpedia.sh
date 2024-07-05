@@ -3,7 +3,7 @@
 set -e
 
 KG_LIST_FILE=$1
-KG_DIR="Jazero/kg/"
+KG_DIR="kg/"
 
 if [ ! -f ${KG_LIST_FILE} ]
 then

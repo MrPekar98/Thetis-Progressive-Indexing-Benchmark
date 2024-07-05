@@ -10,14 +10,13 @@ import dk.aau.cs.dkwe.edao.jazero.datalake.structures.table.TableDeserializer;
 import dk.aau.cs.dkwe.edao.jazero.datalake.structures.table.TableSerializer;
 import dk.aau.cs.dkwe.edao.jazero.datalake.system.Configuration;
 import dk.aau.cs.dkwe.edao.jazero.datalake.system.Logger;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.server.ConfigurableWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -26,7 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class EntityLinkerBenchmark implements WebServerFactoryCustomizer<ConfigurableWebServerFactory>
+@SpringBootApplication
+@RestController
+public class EntityLinker implements WebServerFactoryCustomizer<ConfigurableWebServerFactory>
 {
     private static Map<String, String> links;
 
@@ -45,6 +46,8 @@ public class EntityLinkerBenchmark implements WebServerFactoryCustomizer<Configu
             Type mapType = new TypeToken<Map<String, String>>(){}.getType();
             links = new Gson().fromJson(root, mapType);
         }
+
+        SpringApplication.run(EntityLinker.class, args);
     }
 
     @GetMapping("/ping")
