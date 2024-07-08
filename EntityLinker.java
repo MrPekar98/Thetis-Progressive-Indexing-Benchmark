@@ -81,9 +81,11 @@ public class EntityLinker implements WebServerFactoryCustomizer<ConfigurableWebS
         }
 
         String input = body.get("input");
+        String[] split = input.split("/");
+        input = split[split.length - 1];
 
         String linkedEntity = linkInput(input);
-        return ResponseEntity.ok(linkedEntity != null ? linkedEntity : "None");
+        return ResponseEntity.ok(linkedEntity != null ? "http://dbpedia.org/resource/" + linkedEntity : "None");
     }
 
     /**
