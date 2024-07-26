@@ -64,93 +64,81 @@ cd ../tables_2019/
 for F in ./* ; do tar -xf ${F} ; rm ${F} ; mv tables_2019/${F:0:-7}/* . ; done && rm -r tables_2019/
 ```
 
-Finally, go back to the root directory of this repository and process the tables to annotate the tables with knowledge graph entity links.
+### Setting up Thetis
+First, clone the Thetis repository.
 
 ```bash
-python format_tables.py
+git clone https://github.com/EDAO-Project/TableSearch.git
 ```
 
-### Setting Up Jazero
-First, download the Jazero data lake and move the KG into that directory.
+Download DBpedia 2021.
 
 ```bash
-git clone https://github.com/EDAO-Project/Jazero.git
-mv kg/ Jazero/
+./TableSearch/data/kg/dbpedia/download-dbpedia.sh TableSearch/data/kg/dbpedia/dbpedia_files.txt
 ```
 
-Download embeddings to be loaded into Jazero.
+Pull the Neo4J Docker images, create a network for the experiments, and start a container.
+
+```bash
+docker pull neo4j:4.1.4
+docker network create thetis_network
+docker run -d -p 7474:7474 -p 7687:7687 \
+    --network thetis_network --name thetis_neo4j \
+    -v ${PWD}/files:/kg \
+    -e NEO4J_AUTH=none \
+    -e NEO4JLABS_PLUGINS='[\"apoc\", \"n10s\"]' \
+    -e NEO4J_dbms_security_procedures_unrestricted=apoc.* \
+    -e NEO4J_apoc_export_file_enabled=true \
+    -e NEO4J_apoc_import_file_use_neo4j_config=false \
+    neo4j:4.1.4
+```
+
+Install Neosemantics.
+
+```bash
+docker exec thetis_neo4j wget -P plugins/ https://github.com/neo4j-labs/neosemantics/releases/download/4.1.0.1/neosemantics-4.1.0.1.jar
+docker exec thetis_neo4j bash -c "echo 'dbms.unmanaged_extension_classes=n10s.endpoint=/rdf' >> conf/neo4j.conf"
+docker restart thetis_neo4j
+```
+
+Once Neo4J has completed restarting, load the KG.
+
+```bash
+docker cp load.sh thetis_neo4j:/var/lib/neo4j
+docker exec thetis_neo4j bash -c "./load.sh /var/lib/neo4j /var/lib/neo4j/import"
+```
+
+Download RDF2Vec embeddings for DBpedia 2021.
 
 ```bash
 wget -O embeddings.zip https://zenodo.org/records/6384728/files/embeddings.zip?download=1
 unzip embeddings.zip
 rm embeddings.zip
+mv vectors.txt TableSearch/data/embeddings/
 ```
 
-Start a Neo4J instance in which we will load the DBpedia KG.
+Load the embeddings into Postgres through Thetis.
 
 ```bash
-mkdir -p neo4j_data/ neo4j_plugins/
-docker network create neo4j-network
-docker run -d \
-    --restart always \
-    --network=neo4j-network \
-    --publish=7474:7474 --publish=7687:7687 \
-    --env NEO4J_AUTH=neo4j/12345678 \
-    --env NEO4J_PLUGINS='["apoc", "n10s"]' \
-    --volume=${PWD}/neo4j_data/:/data \
-    --volume=${PWD}/neo4j_plugins/:/plugins \
-    --volume=${PWD}/Jazero/kg/:/kg \
-    --name benchmark_neo4j \
-    neo4j:5.5.0
-sleep 10s
-docker cp import_dbpedia.sh benchmark_neo4j:/var/lib/neo4j
-docker exec -it benchmark_neo4j bash -c './import_dbpedia.sh'
-```
-
-Generate ground truth entity links by running the following script.
-
-```bash
-docker run --rm --network=neo4j-network -it -v ${PWD}:/home python:3.9.19 bash -c "pip install neo4j && python /home/gen_entity_links.py $(docker exec benchmark_neo4j hostname -I)"
-docker stop benchmark_neo4j
-```
-
-This will create the file `entity-links.json` of entity links for all corpus tables.
-Move this `entity-links.json` file to the folder `Jazero/index/`.
-Now, replace the file `Jazero/entity-linker/src/main/java/dk/aau/cs/dkwe/edao/jazero/entitylinker/EntityLinker.java` with the file `EntityLinker.java`.
-
-Start Jazero.
-
-```bash
-cd Jazero/
-./start.sh
-```
-
-While Jazero is starting, compile the connector that allows us to communicate with Jazero.
-
-```bash
-cd JDLC/c/
-mkdir build/ lib/
-cd build/
-cmake -DCMAKE_BUILD_TYPE=Release ..
-cmake --build ./ --target all -- -j 6
-```
-
-Copy the `jdlc_cmd` file into the root directory of this repository.
-Run the following commands to set the admin user and to load the KG into Jazero when Jazero is fully booted.
-
-```bash
-curl -H "Content-Type: application/json" -d '{"username": "admin", "password": "1234"}' http://localhost:8081/set-admin
-docker exec jazero_neo4j /scripts/install.sh
-docker restart jazero_neo4j
-sleep 10s
-docker exec jazero_neo4j /scripts/import.sh . /kg
-```
-
-Load Jazero with the embeddings.
-
-```bash
-./jdlc_cmd -o insertembeddings -h localhost -u admin -c 1234 -j Jazero/ -e vectors.txt -d ' '
+docker pull postgres:12.15
+docker run --network thetis_network \
+    -e POSTGRES_USER=admin \
+    -e POSTGRES_PASSWORD=1234 \
+    -e POSTGRES_DB=embeddings \
+    --name db -d postgres
+cd TableSearch/
+docker run --rm -v $(pwd)/Thetis:/src \
+    -v $(pwd)/data:/data \
+    --network thetis_network \
+    -e POSTGRES_HOST=$(docker exec db hostname -I) \
+    --entrypoint /bin/bash -c "cd src/ && \
+        mvn package && \
+        java -jar target/Thetis.0.1.jar embedding -f /data/embeddings/vectors.txt -db postgres -h ${POSTGRES_HOST} -p 5432 -dbn embeddings -u admin -pw 1234 -dp" \
+    maven:3.8.4-openjdk-17
+cd ..
 ```
 
 ## Experiments
 TODO: Now, run the experiments with the progressive indexing.
+TODO: Run Thetis using the thetis_network network.
+TODO: In the 'docker run' command, set an environment variable to the IP of the Postgres IP (possibly also for Neo4J) and use that environment variable when running the Thetis Java executable.
