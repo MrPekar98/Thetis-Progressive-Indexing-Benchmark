@@ -2,7 +2,7 @@
 A benchmark to evaluate progressive indexing in Jazero.
 
 ## Setup
-Here, we setup the Jazero data lake and the benchmark for evaluating table search.
+Here, we setup Thetis and the benchmark for evaluating table search.
 
 ### Setting Up Table Search Benchmark
 Clone the benchmark repository.
@@ -118,6 +118,8 @@ mv vectors.txt TableSearch/data/embeddings/
 ```
 
 Load the embeddings into Postgres through Thetis.
+Next, we will load the embeddings into Postgres through Thetis.
+First, start an instance of Postgres.
 
 ```bash
 docker pull postgres:12.15
@@ -126,17 +128,30 @@ docker run --network thetis_network \
     -e POSTGRES_PASSWORD=1234 \
     -e POSTGRES_DB=embeddings \
     --name db -d postgres
-cd TableSearch/
-docker run --rm -v $(pwd)/Thetis:/src \
+```
+
+Now, enter the `TableSearch/` directory and start a Docker container with Thetis.
+
+```bash
+docker run --rm -it -v $(pwd)/Thetis:/src \
     -v $(pwd)/data:/data \
     --network thetis_network \
     -e POSTGRES_HOST=$(docker exec db hostname -I) \
-    --entrypoint /bin/bash -c "cd src/ && \
-        mvn package && \
-        java -jar target/Thetis.0.1.jar embedding -f /data/embeddings/vectors.txt -db postgres -h ${POSTGRES_HOST} -p 5432 -dbn embeddings -u admin -pw 1234 -dp" \
-    maven:3.8.4-openjdk-17
-cd ..
+    --entrypoint /bin/bash maven:3.8.4-openjdk-17
 ```
+
+Fro within the Thetis container, run the following command to start loading the embeddings.
+
+```bash
+cd src/
+mvn package -DskipTests
+java -jar target/Thetis.0.1.jar embedding \
+    -f /data/embeddings/vectors.txt \
+    -db postgres -h ${POSTGRES_HOST} \
+    -p 5432 -dbn embeddings -u admin -pw 1234 -dp
+```
+
+You can now exit the Thetis Docker container with `Ctrl+D` and go back to the repository root directory.
 
 ## Experiments
 TODO: Now, run the experiments with the progressive indexing.
