@@ -8,59 +8,80 @@ Before running any experiment, remove the indexes from disk and the logging file
 The index files are 'Jazero/index/*.ser' and the logging file is 'Jazero/logs/log.txt'.
 
 ## Setup
-
-### Injecting Priority Assignment Logging Points
 In order to analyze the priority assignments, we need to inject logging points into the code.
-Therefore, insert the following statement after line 80 in 'Jazero/data-lake/src/main/java/dk/aau/cs/dkwe/edao/jazero/datalake/loader/progressive/ProgressiveIndexWriter.java':
+Therefore, insert the following statements in their respective code locations from the `TableSearch/Thetis/src/main/java/com/thetis/` directory:
 
-'''java
-Logger.log(Logger.Level.INFO, "ID-" + item.getId() + "-" + item.getPriority());
-'''
+- `loader/progressive/ProgressiveIndexWriter.java: 230`: `Logger.logNewLine(Logger.Level.INFO, "Event 3 -> ID-" + tableToIndex.getId() + "-" + tableToIndex.getPriority());`
+- `loader/progressive/ProgressiveIndexWriter.java: 77`: `Logger.logNewLine(Logger.Level.INFO, "Event 1 -> ID-" + item.getId() + "-" + item.getPriority());`
+- `commands/ProgressiveIndexing.java: 305`: `Logger.logNewLine(Logger.Level.INFO, "Event 2 -> ID-" + result.getFirst() + "-" + newPriority);`
+- `commands/ProgressiveIndexing.java: 235`: `Logger.setPrintStream(System.out);`
+- `commands/ProgressiveIndexing.java: 232`: `Logger.setPrintStream(new PrintStream(new FileOutputStream("/data/log.txt")));`
+- `commands/ProgressiveIndexing.java: 26`: `import java.io.PrintStream;`
+- `commands/ProgressiveIndexing.java: 27`: `import java.io.FileOutputStream;`
 
 ## Experiment
 Here, we run the different experiments and plot the results.
 
-Before running any experiments, delete the Jazero indexes from disk as well as the logging file.
+Before running any experiments, delete the logging file `TableSearch/data/log.txt`.
+Run the following commands to start progressive indexing.
 
-'''bash
-rm Jazero/index/*.ser Jazero/logs/log.txt
-'''
+```bash
+cd ../TableSearch/
+docker run -v $(pwd)/queries:/queries \
+    -v $(pwd)/Thetis:/src -v $(pwd)/data:/data \
+    -v $(pwd)/../priority_experiment/corpus:/corpus \
+    --network thetis_network -e NEO4J_HOST=$(docker exec thetis_neo4j hostname -I) \
+    -it --rm thetis bash
 
-Now, start Jazero.
-When an experiment terminates, shut down Jazero and repeat the above steps.
+# From within the Docker container
+cd src/
+mvn package -DskipTests
+java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
+    --table-dir /corpus/ --output-dir /home/ --result-dir /home/ \
+    --indexing-time 1 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
+    -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
+```
 
 ### No Queries
-This experiment requires no script, so just wait until Jazero completes the indexing.
-When Jazero has completed indexing, stop Jazero and run the following command to extract plotting values.
+1. Run the commands to start progressive indexing.
 
-'''python
-python plot.py
-'''
+2. Run the following commands to extract plotting values once the indexing has completed.
 
-This script will output the data values to plot the experiment results as well as how to plot them.
+    '''bash
+        mv TableSearch/data/log.txt log_no_queries.txt
+        python plot.py log_no_queries.txt
+    '''
+
+    This script will output the data values to plot the experiment results as well as how to plot them.
 
 ### Different Queries
-Run the following command to run this experiment when Jazero is fully booted.
+1. Run the commands to start progressive indexing.
 
-'''bash
-different_tables.sh
-'''
+2. Run the following command immediately to start querying the system.
 
-Stop Jazero, and use the following command to plot the results.
+    '''bash
+        different_tables.sh
+    '''
 
-'''python
-python plot.py
-'''
+3. Plot the results.
+
+    '''bash
+        mv ../TableSearch/data/log.txt log_different_tables.txt
+        python plot.py log_different_tables.txt
+    '''
 
 ### Similar Queries
-Run the following command to run this experiment.
+1. Run the commands to start progressive indexing.
 
-'''bash
-same_tables.sh
-'''
+2. Run the following command immediately to start querying the system.
 
-Stop Jazero, and use the following command to plot the results.
+    ```bash
+        same_tables.sh
+    ```
 
-'''python
-python plot.py
-'''
+3. Plot the results.
+
+    '''bash
+        mv ../TableSearch/data/log.txt log_same_tables.txt
+        python plot.py log_same_tables.txt
+    '''

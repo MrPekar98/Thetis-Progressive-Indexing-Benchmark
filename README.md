@@ -133,11 +133,12 @@ docker run --network thetis_network \
 Now, enter the `TableSearch/` directory and start a Docker container with Thetis.
 
 ```bash
+docker build -t thetis .
 docker run --rm -it -v $(pwd)/Thetis:/src \
     -v $(pwd)/data:/data \
     --network thetis_network \
     -e POSTGRES_HOST=$(docker exec db hostname -I) \
-    --entrypoint /bin/bash maven:3.8.4-openjdk-17
+    thetis bash
 ```
 
 Fro within the Thetis container, run the following command to start loading the embeddings.
