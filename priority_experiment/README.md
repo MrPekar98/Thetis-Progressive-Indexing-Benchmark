@@ -47,10 +47,10 @@ java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
 
 2. Run the following commands to extract plotting values once the indexing has completed.
 
-    '''bash
+    ```bash
         mv TableSearch/data/log.txt log_no_queries.txt
         python plot.py log_no_queries.txt
-    '''
+    ```
 
     This script will output the data values to plot the experiment results as well as how to plot them.
 
@@ -59,16 +59,16 @@ java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
 
 2. Run the following command immediately to start querying the system.
 
-    '''bash
+    ```bash
         different_tables.sh
-    '''
+    ```
 
 3. Plot the results.
 
-    '''bash
+    ```bash
         mv ../TableSearch/data/log.txt log_different_tables.txt
         python plot.py log_different_tables.txt
-    '''
+    ```
 
 ### Similar Queries
 1. Run the commands to start progressive indexing.
@@ -81,7 +81,7 @@ java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
 
 3. Plot the results.
 
-    '''bash
+    ```bash
         mv ../TableSearch/data/log.txt log_same_tables.txt
         python plot.py log_same_tables.txt
-    '''
+    ```
