@@ -4,3 +4,4 @@ files/
 priority_experiment/log_no_queries.txt
 priority_experiment/log_different_tables.txt
 priority_experiment/log_same_tables.txt
+priority_experiment/plots_data/

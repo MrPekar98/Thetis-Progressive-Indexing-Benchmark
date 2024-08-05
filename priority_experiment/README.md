@@ -11,11 +11,11 @@ The index files are 'Jazero/index/*.ser' and the logging file is 'Jazero/logs/lo
 In order to analyze the priority assignments, we need to inject logging points into the code.
 Therefore, insert the following statements in their respective code locations from the `TableSearch/Thetis/src/main/java/com/thetis/` directory:
 
-- `loader/progressive/ProgressiveIndexWriter.java: 230`: `Logger.logNewLine(Logger.Level.INFO, "Event 3 -> ID-" + tableToIndex.getId() + "-" + tableToIndex.getPriority());`
-- `loader/progressive/ProgressiveIndexWriter.java: 77`: `Logger.logNewLine(Logger.Level.INFO, "Event 1 -> ID-" + item.getId() + "-" + item.getPriority());`
 - `commands/ProgressiveIndexing.java: 305`: `Logger.logNewLine(Logger.Level.INFO, "Event 2 -> ID-" + result.getFirst() + "-" + newPriority);`
 - `commands/ProgressiveIndexing.java: 235`: `Logger.setPrintStream(System.out);`
 - `commands/ProgressiveIndexing.java: 232`: `Logger.setPrintStream(new PrintStream(new FileOutputStream("/data/log.txt")));`
+- `loader/progressive/ProgressiveIndexWriter.java: 230`: `Logger.logNewLine(Logger.Level.INFO, "Event 3 -> ID-" + tableToIndex.getId() + "-" + tableToIndex.getPriority());`
+- `loader/progressive/ProgressiveIndexWriter.java: 79`: `Logger.logNewLine(Logger.Level.INFO, "Event 1 -> ID-" + item.getId() + "-" + item.getPriority() + "-" + item.getIndexable().rows.size() + "/" + item.getIndexable().numDataRows);`
 - `commands/ProgressiveIndexing.java: 26`: `import java.io.PrintStream;`
 - `commands/ProgressiveIndexing.java: 27`: `import java.io.FileOutputStream;`
 
@@ -48,7 +48,7 @@ java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
 2. Run the following commands to extract plotting values once the indexing has completed.
 
     ```bash
-        mv TableSearch/data/log.txt log_no_queries.txt
+        mv ../TableSearch/data/log.txt log_no_queries.txt
         python plot.py log_no_queries.txt
     ```
 
