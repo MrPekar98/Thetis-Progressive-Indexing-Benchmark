@@ -27,6 +27,7 @@ Run the following commands to start progressive indexing.
 
 ```bash
 cd ../TableSearch/
+mkdir queries/
 docker run -v $(pwd)/queries:/queries \
     -v $(pwd)/Thetis:/src -v $(pwd)/data:/data \
     -v $(pwd)/../priority_experiment/corpus:/corpus \
@@ -37,7 +38,7 @@ docker run -v $(pwd)/queries:/queries \
 cd src/
 mvn package -DskipTests
 java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
-    --table-dir /corpus/ --output-dir /home/ --result-dir /home/ \
+    --table-dir /corpus/ --output-dir /home --result-dir /data \
     --indexing-time 1 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
     -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
 ```
@@ -57,7 +58,7 @@ java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
 ### Different Queries
 1. Run the commands to start progressive indexing.
 
-2. Run the following command immediately to start querying the system.
+2. Run the following command in another window immediately to start querying the system.
 
     ```bash
         different_tables.sh
@@ -73,7 +74,7 @@ java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
 ### Similar Queries
 1. Run the commands to start progressive indexing.
 
-2. Run the following command immediately to start querying the system.
+2. Run the following command in another windows immediately to start querying the system.
 
     ```bash
         same_tables.sh
