@@ -33,7 +33,7 @@ with open(log_file, 'r') as handle:
             first_line = False
             start_time = time
 
-        if 'INFO:' in log and 'Event' in log:
+        if 'INFO:' in log and 'Event 1' in log:
             event = log.split('INFO:')[1].split('->')[0].strip()
             id = log.split('ID-')[1].split('.')[0] + '.json'
             priority = log.split('json')[1][1:]
