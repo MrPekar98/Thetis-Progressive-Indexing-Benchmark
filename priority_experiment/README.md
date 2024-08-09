@@ -14,10 +14,10 @@ Therefore, insert the following statements in their respective code locations fr
 - `commands/ProgressiveIndexing.java: 305`: `Logger.logNewLine(Logger.Level.INFO, "Event 2 -> ID-" + result.getFirst() + "-" + newPriority);`
 - `commands/ProgressiveIndexing.java: 235`: `Logger.setPrintStream(System.out);`
 - `commands/ProgressiveIndexing.java: 232`: `Logger.setPrintStream(new PrintStream(new FileOutputStream("/data/log.txt")));`
-- `loader/progressive/ProgressiveIndexWriter.java: 230`: `Logger.logNewLine(Logger.Level.INFO, "Event 3 -> ID-" + tableToIndex.getId() + "-" + tableToIndex.getPriority());`
-- `loader/progressive/ProgressiveIndexWriter.java: 79`: `Logger.logNewLine(Logger.Level.INFO, "Event 1 -> ID-" + item.getId() + "-" + item.getPriority() + "-" + item.getIndexable().rows.size() + "/" + item.getIndexable().numDataRows);`
 - `commands/ProgressiveIndexing.java: 26`: `import java.io.PrintStream;`
 - `commands/ProgressiveIndexing.java: 27`: `import java.io.FileOutputStream;`
+- `loader/progressive/ProgressiveIndexWriter.java: 230`: `Logger.logNewLine(Logger.Level.INFO, "Event 3 -> ID-" + tableToIndex.getId() + "-" + tableToIndex.getPriority());`
+- `loader/progressive/ProgressiveIndexWriter.java: 79`: `Logger.logNewLine(Logger.Level.INFO, "Event 1 -> ID-" + item.getId() + "-" + item.getPriority() + "-" + item.getIndexable().rows.size() + "/" + item.getIndexable().numDataRows);`
 
 ## Experiment
 Here, we run the different experiments and plot the results.
