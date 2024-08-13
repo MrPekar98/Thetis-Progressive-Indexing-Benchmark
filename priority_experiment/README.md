@@ -1,7 +1,7 @@
 # Small Experiments to Analyze Priority Assignment Rules
 These experiments analyze the priority assignment rules by running 3 different experiments:
 (1) when no queries are executed,
-(2) when different queries are executed, and
+(2) when different queries are executed,
 (3) when similar queries for the same tables are executed.
 
 Before running any experiment, remove the indexes from disk and the logging file and then start Jazero.
@@ -61,7 +61,7 @@ java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
 2. Run the following command in another window immediately to start querying the system.
 
     ```bash
-        different_tables.sh
+        ./different_tables.sh
     ```
 
 3. Plot the results.
@@ -74,10 +74,10 @@ java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
 ### Similar Queries
 1. Run the commands to start progressive indexing.
 
-2. Run the following command in another windows immediately to start querying the system.
+2. Run the following command in another window immediately to start querying the system.
 
     ```bash
-        same_tables.sh
+        ./same_tables.sh
     ```
 
 3. Plot the results.
@@ -86,3 +86,35 @@ java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
         mv ../TableSearch/data/log.txt log_same_tables.txt
         python plot.py log_same_tables.txt
     ```
+
+### Meausure Ranking Quality
+We measure the ranking quality of Thetis during progressive indexing by executing queries at different time points and compare the rankings to the raning when the indexes are fully constructed.
+This experiment consists of two sub-experiments: when executing 10 different queries and 10 similar/same queries.
+
+1. Run the above commands to start progressive indexing.
+
+2. Run the following command in another window immediately to start querying the system using different queries
+
+    ```bash
+        ./ranking_different_queries.sh
+    ```
+
+    or the following command for similar/same queries.
+
+    ```bash
+        ./ranking_different_queries.sh
+    ```
+
+3. Plot the results when querying the system with different queries
+
+    ```bash
+        python plot_ranking.py different_results/
+    ```
+
+    or using similar/same queries.
+
+    ```bash
+        python plot_ranking.py similar_queries/
+    ```
+
+The files containing the plotting data can be found in `plots_data/`.

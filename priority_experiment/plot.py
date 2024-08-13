@@ -42,6 +42,10 @@ with open(log_file, 'r') as handle:
             table_current_size = int(table_stats.split('/')[0])
             table_original_size = int(table_stats.split('/')[1])
             time_point = int(time.split(':')[1]) - int(start_time.split(':')[1])
+
+            if time_point < 0:
+                time_point = (60 - int(start_time.split(':')[1])) + int(time.split(':')[1])
+
             time_entry = {'time point': time_point, 'tables': list()}
 
             if len(data) == 0 or data[-1]['time point'] != time_point:
@@ -55,6 +59,10 @@ with open(log_file, 'r') as handle:
 
         elif 'Fully indexed' in log:
             time_point = int(time.split(':')[1]) - int(start_time.split(':')[1])
+
+            if time_point < 0:
+                time_point = (60 - int(start_time.split(':')[1])) + int(time.split(':')[1])
+
             indexed = log.split('Fully indexed')[1].strip().split(' ')[0]
             fraction = int(indexed.split('/')[0]) / int(indexed.split('/')[1])
             indexed_fractions[str(time_point)] = fraction
