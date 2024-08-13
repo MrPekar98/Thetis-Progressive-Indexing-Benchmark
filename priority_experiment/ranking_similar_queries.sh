@@ -44,7 +44,7 @@ echo "Final query executions"
 QUERY_COUNT=0
 mkdir -p "${RESULT_DIR}final/"
 
-for QUERY in "different_queries/"* ;\
+for QUERY in "similar_queries/"* ;\
 do
     echo "Adding ${QUERY} to the query queue"
     cp ${QUERY} ../TableSearch/queries/
