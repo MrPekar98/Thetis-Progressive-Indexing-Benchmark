@@ -4,15 +4,16 @@ set -e
 
 RESULT_DIR="different_results/"
 LOG_FILE="../TableSearch/data/log.txt"
+THETIS_RESULT_DIR="../TableSearch/data/search_output/"
 START_TIME=$(date +%s)
 QUERY_LIMIT=10
 TABLES=$(ls corpus/ | wc -l)
 mkdir -p ${RESULT_DIR}
+sleep 5m
 
 while [[ $(tail -n 3 ${LOG_FILE} | head -n 1) != *"Fully indexed $((${TABLES} - 1))"* ]]
 do
     QUERY_COUNT=0
-    sleep 5m
     TIME_POINT="$(($(date +%s) - ${START_TIME}))s"
     mkdir -p ${RESULT_DIR}${TIME_POINT}/
 
@@ -25,16 +26,20 @@ do
         echo "Adding ${QUERY} to the query queue"
         cp ${QUERY} ../TableSearch/queries/
 
-        QUERY_FILE=(${QUERY//// })
-        QUERY_ID=(${QUERY_FILE[1]//./ })
-        QUERY_ID=${QUERY_ID[0]}
-        cp -r ../TableSearch/data/search_output/${QUERY_ID}/ ${RESULT_DIR}${TIME_POINT}/
-
         if [[ ${QUERY_COUNT} == ${QUERY_LIMIT} ]]
         then
             break
         fi
     done
+
+    sleep 5m
+
+    for RESULT in "${THETIS_RESULT_DIR}"* ;\
+    do
+        cp -r ${RESULT} ${RESULT_DIR}${TIME_POINT}/
+    done
+
+    rm -r 
 done
 
 # Get the final ranking when progressiv indexing is done
@@ -48,15 +53,20 @@ for QUERY in "different_queries/"* ;\
 do
     echo "Adding ${QUERY} to the query queue"
     cp ${QUERY} ../TableSearch/queries/
-
     QUERY_COUNT=$((${QUERY_COUNT} + 1))
-    QUERY_FILE=(${QUERY//// })
-    QUERY_ID=(${QUERY_FILE[1]//./ })
-    QUERY_ID=${QUERY_ID[0]}
-    cp -r ../TableSearch/data/search_output/${QUERY_ID}/ "${RESULT_DIR}final/"
 
     if [[ ${QUERY_COUNT} == ${QUERY_LIMIT} ]]
     then
         break
     fi
 done
+
+sleep 5m
+
+for RESULT in "${THETIS_RESULT_DIR}"* ;\
+do
+    cp -r ${RESULT} "${RESULT_DIR}final/"
+done
+
+echo
+echo "Done"
