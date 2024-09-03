@@ -3,6 +3,7 @@ import os
 import json
 import numpy as np
 from sklearn.metrics import ndcg_score
+import math
 
 results_dir = sys.argv[1]
 corpus_dir = 'corpus/'
@@ -24,13 +25,23 @@ def ranking_ndcg(test_file, expected_file, corpus):
         obj = json.load(handle)
 
         for table in obj['scores']:
-            test_scores[table['tableID']] = table['score']
+            score = table['score']
+
+            if math.isnan(score):
+                score = 0.0
+
+            test_scores[table['tableID']] = score
 
     with open(expected_file, 'r') as handle:
         obj = json.load(handle)
 
         for table in obj['scores']:
-            expected_scores[table['tableID']] = table['score']
+            score = table['score']
+
+            if math.isnan(score):
+                score = 0.0
+
+            expected_scores[table['tableID']] = score
 
     return (list(test_scores.values()), list(expected_scores.values()))
 

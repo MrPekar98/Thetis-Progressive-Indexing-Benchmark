@@ -6,7 +6,9 @@ log_file = sys.argv[1]
 start_time = None
 data = list()
 indexed_fractions = dict()
+touched_tables = dict()
 plot_folder = 'plots_data/'
+corpus_size = 10000
 
 if not os.path.exists(log_file):
     print('Log file \'' + log_file + '\' does not exist')
@@ -37,7 +39,13 @@ with open(log_file, 'r') as handle:
             event = log.split('INFO:')[1].split('->')[0].strip()
             id = log.split('ID-')[1].split('.')[0] + '.json'
             priority = log.split('json')[1][1:]
-            priority = float(priority[0:priority.find('-', 2)])
+
+            if 'E' in priority:
+                priority = float(priority[0:priority.find('-', priority.find('-', 2) + 1)])
+
+            else:
+                priority = float(priority[0:priority.find('-', 2)])
+
             table_stats = log.split('-')[-1]
             table_current_size = int(table_stats.split('/')[0])
             table_original_size = int(table_stats.split('/')[1])
@@ -50,9 +58,14 @@ with open(log_file, 'r') as handle:
 
             if len(data) == 0 or data[-1]['time point'] != time_point:
                 data.append(time_entry)
+                touched_tables[str(time_point)] = set()
 
-            table_data = {'id': id, 'table size': table_current_size, 'priority': priority}
+                if str(time_point - 1) in touched_tables.keys():
+                    touched_tables[str(time_point)] = set(touched_tables[str(time_point - 1)])
+
+            table_data = {'id': id, 'table size': table_current_size, 'original size': table_original_size, 'priority': priority}
             data[-1]['tables'].append(table_data)
+            touched_tables[str(time_point)].add(id)
 
             if str(time_point) not in indexed_fractions.keys():
                 indexed_fractions[str(time_point)] = 0.0
@@ -149,5 +162,18 @@ with open(plot_folder + 'indexed_fractions.txt', 'w') as handle:
 
         handle.write(str(fraction) + '\n')
         prev_fraction = fraction
+
+with open(plot_folder + 'touched_tables.txt', 'w') as handle:
+    handle.write('Fraction of tables with at least one indexed row at different time points\n')
+    handle.write('Time points:\n')
+
+    for time_point in touched_tables.keys():
+        handle.write(time_point + '\n')
+
+    handle.write('\nFractions:\n')
+
+    for time_point in touched_tables.keys():
+        fraction = len(touched_tables[time_point]) / corpus_size
+        handle.write(str(fraction) + '\n')
 
 print('Done')
