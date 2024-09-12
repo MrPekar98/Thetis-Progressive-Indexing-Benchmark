@@ -17,7 +17,7 @@ Run the following list of commands to properly unpack the downloaded benchmark.
 ```bash
 cd SemanticTableSearchDataset/
 rm -r ground_truth/2013/ queries/2013/
-cd ground_truth/2019/navigational_links/
+cd ground_truth/2019/navigation_links/
 for F in ./* ; do tar -xf ${F} ; rm ${F} ; mv ${F:0:-7}/* . ; rmdir ${F:0:-7} ; done
 cd ../wikipedia_categories/
 for F in ./* ; do tar -xf ${F} ; rm ${F} ; mv ${F:0:-7}/* . ; rmdir ${F:0:-7} ; done
@@ -51,13 +51,11 @@ with open('wikipage-to-navigational-link.json', 'w') as handle:
     json.dump(concat, handle, indent = 4)
 ```
 
-Run the following list of commands from the root directory of tghe benchmark directory to unpack the table corpus.
+Run the following list of commands from the root directory of the benchmark directory to unpack the table corpus.
 
 ```bash
 rm -r table_corpus/*2013*
 cd table_corpus/
-tar -xf tableIDToEntities_2019.ttl.tar.gz
-rm tableIDToEntities_2019.ttl.tar.gz
 cd csv_tables_2019/
 for F in ./* ; do tar -xf ${F} ; rm ${F} ; mv csv_tables_2019/${F:0:-7}/* . ; done && rm -rf csv_tables_2019
 cd ../tables_2019/
@@ -65,16 +63,10 @@ for F in ./* ; do tar -xf ${F} ; rm ${F} ; mv tables_2019/${F:0:-7}/* . ; done &
 ```
 
 ### Setting up Thetis
-First, clone the Thetis repository.
+First, clone the Thetis repository from the repository root directory.
 
 ```bash
 git clone https://github.com/EDAO-Project/TableSearch.git
-```
-
-Download DBpedia 2021.
-
-```bash
-./TableSearch/data/kg/dbpedia/download-dbpedia.sh TableSearch/data/kg/dbpedia/dbpedia_files.txt
 ```
 
 Pull the Neo4J Docker images, create a network for the experiments, and start a container.
@@ -127,7 +119,7 @@ docker run --network thetis_network \
     -e POSTGRES_USER=admin \
     -e POSTGRES_PASSWORD=1234 \
     -e POSTGRES_DB=embeddings \
-    --name db -d postgres
+    --name db -d postgres:12.15
 ```
 
 Now, enter the `TableSearch/` directory and start a Docker container with Thetis.
@@ -141,7 +133,7 @@ docker run --rm -it -v $(pwd)/Thetis:/src \
     thetis bash
 ```
 
-Fro within the Thetis container, run the following command to start loading the embeddings.
+From within the Thetis container, run the following command to start loading the embeddings.
 
 ```bash
 cd src/
