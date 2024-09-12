@@ -155,6 +155,66 @@ java -jar target/Thetis.0.1.jar embedding \
 You can now exit the Thetis Docker container with `Ctrl+D` and go back to the repository root directory.
 
 ## Experiments
-TODO: Now, run the experiments with the progressive indexing.
-TODO: Run Thetis using the thetis_network network.
-TODO: In the 'docker run' command, set an environment variable to the IP of the Postgres IP (possibly also for Neo4J) and use that environment variable when running the Thetis Java executable.
+In an independent window, run a Docker container and start progressively indexing Thetis:
+
+```bash
+cd TableSearch/
+mkdir -p queries/ tables/ data/output/ data/indexes/
+docker run -v $(pwd)/queries:/queries \
+           -v $(pwd)/tables:/tables \
+           -v $(pwd)/Thetis:/src -v $(pwd)/data:/data \
+           -v $(pwd)/../SemanticTableSearchDatasettable_corpus/tables_2019:/corpus \
+           --network thetis_network -e NEO4J_HOST=$(docker exec thetis_neo4j hostname -I) \
+           -it --rm thetis bash
+```
+
+Then, start progressive indexing using types:
+
+```bash
+cd src/
+mvn package -DskipTests
+java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
+     --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/output/ \
+     --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
+     -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
+```
+
+Alternatively, start progressive indexing using embeddings:
+
+```bash
+cd src/
+mvn package -DskipTests
+java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop embeddings --embeddingSimilarityFunction abs_cos \
+     --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/output/ \
+     --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
+     -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
+```
+
+### Table Discoverability
+In this experiment, we evaluate how long it takes before a table that is inserted into the corpus becomes discoverable.
+Specifically, we insert a fixed number of tables at fixed time points and measure how long it takes for the newly inserted table to become retrievable.
+The number of tables to insert is a parameter.
+
+Run the above commands to start progressive indexing, and immediately start the following script and pass the number of tables to insert into the corpus.
+
+```bash
+./discoverability.sh <NUM_TABLES>
+```
+
+The results are stored in `results/discoverability/`.
+
+### Ranking Quality
+We measure the ranking quality using NDCG during the early stages of progressive indexing.
+This evaluates the ranking quality when the time-to-insight is significantly reduced.
+Specifically, we focus on querying Thetis in the very early stages of progressive indexing.
+
+Start progressive indexing in Thetis, as described above, and run immediately the following script to start the experiment.
+Pass a period in seconds that indicates how long to wait until we execute a query again.
+Pass also the number of queries to execute at every time point.
+Note that the resource comes with more than 2K queries for this corpus, by we suggest you use a much smaller number of queries, e.g., 3.
+
+```bash
+./ranking.sh <PERIOD> <NUM_QUERIES>
+```
+
+The results are stored in `results/ranking/`.
