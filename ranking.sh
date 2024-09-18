@@ -7,6 +7,7 @@ NUM_QUERIES=$2
 OUTPUT_DIR="results/ranking/"
 QUERY_DIR="SemanticTableSearchDataset/queries/2019/1_tuples_per_query/"
 THETIS_QUERY_DIR="TableSearch/queries/"
+THETIS_OUTPUT_DIR="TableSearch/data/search_output/"
 
 mkdir -p ${OUTPUT_DIR}
 
@@ -18,12 +19,12 @@ fi
 
 START=$(date +%s)
 CURRENT=${START}
-LIMIT=$(((60 * 60) / 2))
+LIMIT=$(date -ud "30 minute" +%s)
 
-while [[ $((${CURRENT} - ${START})) < ${LIMIT} ]]
+while [[ $(date -u +%s) -le ${LIMIT} ]]
 do
     COUNT=0
-    echo "Adding ${NUM_QUERIES} to the query queue at time point $((${CURRENT} - ${START}))m"
+    echo "Adding ${NUM_QUERIES} to the query queue at time point $((${CURRENT} - ${START}))s"
 
     for QUERY in "${QUERY_DIR}"* ;\
     do
@@ -37,6 +38,9 @@ do
     done
 
     sleep ${PERIOD}s
+    mkdir -p "${OUTPUT_DIR}$((${CURRENT} - ${START}))/"
+    cp -r "${THETIS_OUTPUT_DIR}"* "${OUTPUT_DIR}$((${CURRENT} - ${START}))/"
+
     CURRENT=$(date +%s)
 done
 

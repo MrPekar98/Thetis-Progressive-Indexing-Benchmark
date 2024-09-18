@@ -62,7 +62,19 @@ cd ../tables_2019/
 for F in ./* ; do tar -xf ${F} ; rm ${F} ; mv tables_2019/${F:0:-7}/* . ; done && rm -r tables_2019/
 ```
 
-### Setting up Thetis
+We now also add the GitTabes dataset, which consists of more tables (1M) of more rows (142 on average per table).
+Download the dataset with the following commands:
+
+```bash
+mkdir -p gittables/
+wget -O gittables.zip https://zenodo.org/api/records/6517052/files-archive
+unzip gittables.zip
+rm gittables.zip
+mv *.zip gittables/
+python format_gittables.py
+```
+
+### Setting Up Thetis
 First, clone the Thetis repository from the repository root directory.
 
 ```bash
@@ -146,6 +158,24 @@ java -jar target/Thetis.0.1.jar embedding \
 
 You can now exit the Thetis Docker container with `Ctrl+D` and go back to the repository root directory.
 
+### Setting Up SANTOS
+SANTOS is a semantic table union search approach.
+Clone the repository and build the Docker image:
+
+```bash
+git clone https://github.com/northeastern-datalab/santos.git
+docker build -t santos -f santos.dockerfile .
+```
+
+### Setting Up Starmie
+Starmie is an approach for semantic data discovery based on learned column representations.
+Clone the repository and build the Docker image:
+
+```bash
+git clone https://github.com/megagonlabs/starmie.git
+docker build -t starmie -f starmie.dockerfile .
+```
+
 ## Experiments
 In an independent window, run a Docker container and start progressively indexing Thetis:
 
@@ -155,7 +185,7 @@ mkdir -p queries/ tables/ data/output/ data/indexes/
 docker run -v $(pwd)/queries:/queries \
            -v $(pwd)/tables:/tables \
            -v $(pwd)/Thetis:/src -v $(pwd)/data:/data \
-           -v $(pwd)/../SemanticTableSearchDatasettable_corpus/tables_2019:/corpus \
+           -v $(pwd)/../SemanticTableSearchDataset/table_corpus/tables_2019:/corpus \
            --network thetis_network -e NEO4J_HOST=$(docker exec thetis_neo4j hostname -I) \
            -it --rm thetis bash
 ```
@@ -166,9 +196,9 @@ Then, start progressive indexing using types:
 cd src/
 mvn package -DskipTests
 java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
-     --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/output/ \
+     --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/ \
      --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
-     -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
+     -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
 ```
 
 Alternatively, start progressive indexing using embeddings:
@@ -179,7 +209,7 @@ mvn package -DskipTests
 java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop embeddings --embeddingSimilarityFunction abs_cos \
      --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/output/ \
      --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
-     -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
+     -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
 ```
 
 ### Table Discoverability
@@ -198,8 +228,9 @@ The results are stored in `results/discoverability/`.
 ### Ranking Quality
 We measure the ranking quality using NDCG during the early stages of progressive indexing.
 This evaluates the ranking quality when the time-to-insight is significantly reduced.
-Specifically, we focus on querying Thetis in the very early stages of progressive indexing.
+Specifically, we focus on querying the baselines in the very early stages of progressive indexing.
 
+#### Thetis
 Start progressive indexing in Thetis, as described above, and run immediately the following script to start the experiment.
 Pass a period in seconds that indicates how long to wait until we execute a query again.
 Pass also the number of queries to execute at every time point.
@@ -210,3 +241,77 @@ Note that the resource comes with more than 2K queries for this corpus, by we su
 ```
 
 The results are stored in `results/ranking/`.
+
+Before evaluating ranking, the ground truth must be established.
+Copy the same number of queries to the `TableSearch/queries/` directory with the following script:
+
+```bash
+COUNT=0
+
+for QUERY in "SemanticTableSearchDataset/queries/2019/1_tuples_per_query/"* ;\
+do
+    COUNT=$((${COUNT} + 1))
+    cp ${QUERY} TableSearch/queries/
+
+    if [[ ${COUNT} == <INSERT NUMBER OF QUERIES HERE> ]]
+    then
+        break
+    fi
+done
+```
+
+Construct then indexes by running the following script within the Thetis Docker container:
+
+```bash
+java -Xms25g -jar target/Thetis.0.1.jar index --table-dir /corpus/ \
+     --output-dir /data/indexes/ -t 4 -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
+```
+
+Run the following script to perform searching in Thetis.
+
+```bash
+RESULT_DIR="/data/ground_truth/"
+mkdir -p ${RESULT_DIR}
+
+for QUERY in "/queries/"* ;\
+do
+    java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 10 \
+         -q ${QUERY} -td /corpus/ -i /data/indexes/ -od ${RESULT_DIR} --embeddingSimilarityFunction abs_cos \
+         --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn -pf hnsh
+done
+```
+
+Now, evaluate the ranking using NDCG by running the Python script:
+
+```bash
+mkdir -p results/ground_truth/
+mv TableSearch/data/ground_truth/search_output/* results/ground_truth/
+python ndcg.py
+```
+
+#### SANTOS
+We perform an experiment to evaluate the ranking using SANTOS during progressive and adaptive indexing.
+We incrementally add more data to index based on the same priority assignment rules applied in Thetis.
+
+The ranking experiment in SANTOS is already set up in a Docker images.
+To run the experiment, run the Docker container:
+
+```bash
+mkdir -p santos_results/
+docker run --rm ${PWD}/santos_results:/results santos
+```
+
+The results can now be found in `santos_results/`.
+Now some plotting...
+
+#### Starmie
+We perform the same experiment in Starmie as with SANTOS, and the experiment is also aldready setup in a Docker images.
+Run the experiment with the following commands:
+
+```bash
+mkdir -p starmie_results/
+docker run --rm -v ${PWD}/starmie_results:/results starmie
+```
+
+The results can now be found in `starmie_results/`.
+Now some plotting...
