@@ -159,7 +159,7 @@ java -jar target/Thetis.0.1.jar embedding \
 You can now exit the Thetis Docker container with `Ctrl+D` and go back to the repository root directory.
 
 ### Setting Up SANTOS
-SANTOS is a semantic table union search approach.
+<a href="https://github.com/northeastern-datalab/santos">SANTOS</a> is a semantic table union search approach.
 Clone the repository and build the Docker image:
 
 ```bash
@@ -168,7 +168,7 @@ docker build -t santos -f santos.dockerfile .
 ```
 
 ### Setting Up Starmie
-Starmie is an approach for semantic data discovery based on learned column representations.
+<a href="https://github.com/megagonlabs/starmie">Starmie</> is an approach for semantic data discovery based on learned column representations.
 Clone the repository and build the Docker image:
 
 ```bash
