@@ -6,7 +6,7 @@ RESULT_DIR="similar_results/"
 LOG_FILE="../TableSearch/data/log.txt"
 THETIS_RESULT_DIR="../TableSearch/data/search_output/"
 START_TIME=$(date +%s)
-QUERY_LIMIT=10
+QUERY_LIMIT=50
 TABLES=$(ls corpus/ | wc -l)
 mkdir -p ${RESULT_DIR}
 sleep 5m

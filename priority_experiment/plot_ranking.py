@@ -57,6 +57,10 @@ with open(plot_dir + 'ndcg.txt', 'w') as handle:
         for query_id in query_ids:
             test_file = results_dir + '/' + time_point + '/' + query_id + '/filenameToScore.json'
             expected_file = gt_results + query_id + '/filenameToScore.json'
+
+            if not os.path.exists(test_file):
+                continue
+
             scores = ranking_ndcg(test_file, expected_file, corpus)
             ndcg = ndcg_score(np.array([scores[1]]), np.array([scores[0]]), k = 10)
             handle.write(str(ndcg) + '\n')
