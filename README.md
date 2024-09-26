@@ -301,16 +301,17 @@ We perform an experiment to evaluate the ranking using SANTOS during progressive
 We incrementally add more data to index based on the same priority assignment rules applied in Thetis.
 
 The ranking experiment in SANTOS is already set up in a Docker images.
-To run the experiment, run the Docker container, and pass the fraction of data to index in between query executions, the maximum fraction of data to index before concluding the experiment, pass the number of queries to execute in each period, and the name of the corpus to evaluate on (must be either `wikitables` or `gittables`):
+To run the experiment, run the Docker container, and pass the fraction of data to index in between query executions, the maximum fraction of data to index before concluding the experiment, pass 1 or 5 for the number of rows for the queries, and the name of the corpus to evaluate on (must be either `wikitables` or `gittables`):
 
 ```bash
 mkdir -p santos_results/
 docker run --rm -v ${PWD}/santos_results:/results \
            -v ${PWD}/SemanticTableSearchDataset/table_corpus/csv_tables_2019:/wikitables \
            -v ${PWD}/gittables_csv:/gittables \
+           -v ${PWD}/queries:/queries \
            -e FRACTION=<insert fraction> \
            -e FRACTION_LIMIT=<insert limit> \
-           -e NUM_QUERIES=<insert number of queries> \
+           -e QUERY_SIZE=<insert query size> \
            -e CORPUS=<insert corpus name> santos
 ```
 
@@ -319,16 +320,17 @@ Now some plotting...
 
 #### Starmie
 We perform the same experiment in Starmie as with SANTOS, and the experiment is also aldready setup in a Docker images.
-Run the experiment with the following commands, and pass the fraction of data to index in between query executions, the maximum fraction of data to index before concluding the experiment, the pass the number of queries to execute in each period, and the name of the corpus to evaluate on (must be either `wikitables` or `gittables`):
+Run the experiment with the following commands, and pass the fraction of data to index in between query executions, the maximum fraction of data to index before concluding the experiment, the pass 1 or 5 for the number of rows for the queries, and the name of the corpus to evaluate on (must be either `wikitables` or `gittables`):
 
 ```bash
 mkdir -p starmie_results/
 docker run --rm -v ${PWD}/starmie_results:/results \
            -v  ${PWD}/SemanticTableSearchDataset/table_corpus/csv_tables_2019:/wikitables\
            -v ${PWD}/gittables_csv:/gittables \
+           -v ${PWD}/queries:/queries \
            -e FRACTION=<insert period> \
            -e FRACTION_LIMIT=<insert limit> \
-           -e NUM_QUERIES=<insert number of queries> \
+           -e QUERY_SIZE=<insert query size> \
            -e CORPUS=<insert corpus name> starmie
 ```
 
