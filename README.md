@@ -72,6 +72,7 @@ unzip gittables.zip
 rm gittables.zip
 mv *.zip gittables/
 python format_gittables.py
+python json2csv.py gittables/
 ```
 
 ### Setting Up Thetis
@@ -168,7 +169,7 @@ docker build -t santos -f santos.dockerfile .
 ```
 
 ### Setting Up Starmie
-<a href="https://github.com/megagonlabs/starmie">Starmie</> is an approach for semantic data discovery based on learned column representations.
+<a href="https://github.com/megagonlabs/starmie">Starmie</a> is an approach for semantic data discovery based on learned column representations.
 Clone the repository and build the Docker image:
 
 ```bash
@@ -177,6 +178,12 @@ docker build -t starmie -f starmie.dockerfile .
 ```
 
 ## Experiments
+Run the following command to create the set of queries for the experiments, and pass the number of queries you wish to use in the experiments:
+
+```bash
+python gen_queries.py <number of queries>
+```
+
 In an independent window, run a Docker container and start progressively indexing Thetis:
 
 ```bash
@@ -190,7 +197,7 @@ docker run -v $(pwd)/queries:/queries \
            -it --rm thetis bash
 ```
 
-Then, start progressive indexing using types:
+Then, start progressive indexing using types within the Docker container:
 
 ```bash
 cd src/
@@ -234,7 +241,7 @@ Specifically, we focus on querying the baselines in the very early stages of pro
 Start progressive indexing in Thetis, as described above, and run immediately the following script to start the experiment.
 Pass a period in seconds that indicates how long to wait until we execute a query again.
 Pass also the number of queries to execute at every time point.
-Note that the resource comes with more than 2K queries for this corpus, by we suggest you use a much smaller number of queries, e.g., 3.
+Note that the resource comes with more than 2K queries for this corpus, by we suggest you use a much smaller number of queries, e.g., 10.
 
 ```bash
 ./ranking.sh <PERIOD> <NUM_QUERIES>
@@ -294,11 +301,17 @@ We perform an experiment to evaluate the ranking using SANTOS during progressive
 We incrementally add more data to index based on the same priority assignment rules applied in Thetis.
 
 The ranking experiment in SANTOS is already set up in a Docker images.
-To run the experiment, run the Docker container:
+To run the experiment, run the Docker container, and pass the fraction of data to index in between query executions, the maximum fraction of data to index before concluding the experiment, pass the number of queries to execute in each period, and the name of the corpus to evaluate on (must be either `wikitables` or `gittables`):
 
 ```bash
 mkdir -p santos_results/
-docker run --rm ${PWD}/santos_results:/results santos
+docker run --rm -v ${PWD}/santos_results:/results \
+           -v ${PWD}/SemanticTableSearchDataset/table_corpus/csv_tables_2019:/wikitables \
+           -v ${PWD}/gittables_csv:/gittables \
+           -e FRACTION=<insert fraction> \
+           -e FRACTION_LIMIT=<insert limit> \
+           -e NUM_QUERIES=<insert number of queries> \
+           -e CORPUS=<insert corpus name> santos
 ```
 
 The results can now be found in `santos_results/`.
@@ -306,11 +319,17 @@ Now some plotting...
 
 #### Starmie
 We perform the same experiment in Starmie as with SANTOS, and the experiment is also aldready setup in a Docker images.
-Run the experiment with the following commands:
+Run the experiment with the following commands, and pass the fraction of data to index in between query executions, the maximum fraction of data to index before concluding the experiment, the pass the number of queries to execute in each period, and the name of the corpus to evaluate on (must be either `wikitables` or `gittables`):
 
 ```bash
 mkdir -p starmie_results/
-docker run --rm -v ${PWD}/starmie_results:/results starmie
+docker run --rm -v ${PWD}/starmie_results:/results \
+           -v  ${PWD}/SemanticTableSearchDataset/table_corpus/csv_tables_2019:/wikitables\
+           -v ${PWD}/gittables_csv:/gittables \
+           -e FRACTION=<insert period> \
+           -e FRACTION_LIMIT=<insert limit> \
+           -e NUM_QUERIES=<insert number of queries> \
+           -e CORPUS=<insert corpus name> starmie
 ```
 
 The results can now be found in `starmie_results/`.

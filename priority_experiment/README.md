@@ -11,13 +11,14 @@ The index files are 'Jazero/index/*.ser' and the logging file is 'Jazero/logs/lo
 In order to analyze the priority assignments, we need to inject logging points into the code.
 Therefore, insert the following statements in their respective code locations from the `TableSearch/Thetis/src/main/java/com/thetis/` directory:
 
-- `commands/ProgressiveIndexing.java: 305`: `Logger.logNewLine(Logger.Level.INFO, "Event 2 -> ID-" + res.getFirst() + "-" + median);`
+- `commands/ProgressiveIndexing.java: 303` `indexWriter.updateIndexable(res.getFirst(), i -> Logger.logNewLine(Logger.Level.INFO, "Event 2 -> ID-" + res.getFirst() + "-" + i));`
+#- `commands/ProgressiveIndexing.java: 303`: `Logger.logNewLine(Logger.Level.INFO, "Event 2 -> ID-" + res.getFirst() + "-" + median);`
 - `commands/ProgressiveIndexing.java: 234`: `Logger.setPrintStream(System.out);`
 - `commands/ProgressiveIndexing.java: 230`: `Logger.setPrintStream(new PrintStream(new FileOutputStream("/data/log.txt")));`
 - `commands/ProgressiveIndexing.java: 24`: `import java.io.PrintStream;`
 - `commands/ProgressiveIndexing.java: 25`: `import java.io.FileOutputStream;`
-- `loader/progressive/ProgressiveIndexWriter.java: 236`: `Logger.logNewLine(Logger.Level.INFO, "Event 3 -> ID-" + tableToIndex.getId() + "-" + tableToIndex.getPriority());`
-- `loader/progressive/ProgressiveIndexWriter.java: 79`: `Logger.logNewLine(Logger.Level.INFO, "Event 1 -> ID-" + item.getId() + "-" + item.getPriority() + "-" + item.getIndexable().rows.size() + "/" + item.getIndexable().numDataRows);`
+- `loader/progressive/ProgressiveIndexWriter.java: 244`: `Logger.logNewLine(Logger.Level.INFO, "Event 3 -> ID-" + tableToIndex.getId() + "-" + tableToIndex.getPriority());`
+- `loader/progressive/ProgressiveIndexWriter.java: 82`: `Logger.logNewLine(Logger.Level.INFO, "Event 1 -> ID-" + item.getId() + "-" + item.getPriority() + "-" + item.getIndexable().rows.size() + "/" + item.getIndexable().numDataRows);`
 
 ## Experiment
 Here, we run the different experiments and plot the results.
