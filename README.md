@@ -171,10 +171,19 @@ try
 
 catch (FileNotFoundException ignored) {}
 ```
-- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`: `import com.thetis.system.Configuration;`
-- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`: `import java.io.PrintStream;`
-- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`: `import java.io.FileOutputStream;`
-- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`: `import java.io.FileNotFoundException;`
+- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`: 
+```javaimport com.thetis.system.Configuration;
+```
+- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`:
+```java
+import java.io.PrintStream;```
+- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`:
+```java
+import java.io.FileOutputStream;
+```
+- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`:
+```javaimport java.io.FileNotFoundException;
+```
 
 ### Setting Up SANTOS
 <a href="https://github.com/northeastern-datalab/santos">SANTOS</a> is a semantic table union search approach.
