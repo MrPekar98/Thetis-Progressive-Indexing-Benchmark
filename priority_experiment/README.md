@@ -12,7 +12,6 @@ In order to analyze the priority assignments, we need to inject logging points i
 Therefore, insert the following statements in their respective code locations from the `TableSearch/Thetis/src/main/java/com/thetis/` directory:
 
 - `commands/ProgressiveIndexing.java: 303` `indexWriter.updateIndexable(res.getFirst(), i -> Logger.logNewLine(Logger.Level.INFO, "Event 2 -> ID-" + res.getFirst() + "-" + i));`
-#- `commands/ProgressiveIndexing.java: 303`: `Logger.logNewLine(Logger.Level.INFO, "Event 2 -> ID-" + res.getFirst() + "-" + median);`
 - `commands/ProgressiveIndexing.java: 234`: `Logger.setPrintStream(System.out);`
 - `commands/ProgressiveIndexing.java: 230`: `Logger.setPrintStream(new PrintStream(new FileOutputStream("/data/log.txt")));`
 - `commands/ProgressiveIndexing.java: 24`: `import java.io.PrintStream;`

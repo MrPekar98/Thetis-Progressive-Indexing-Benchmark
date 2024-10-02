@@ -159,12 +159,28 @@ java -jar target/Thetis.0.1.jar embedding \
 
 You can now exit the Thetis Docker container with `Ctrl+D` and go back to the repository root directory.
 
+Finally, insert the following code:
+
+- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 195`:
+```java
+try
+{
+    Configuration.setLogLevel(Logger.Level.DEBUG);
+    Logger.setPrintStream(new PrintStream(new FileOutputStream("/data/log.txt")));
+}
+
+catch (FileNotFoundException ignored) {}
+```
+- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`: `import com.thetis.system.Configuration;`
+- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`: `import java.io.PrintStream;`
+- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`: `import java.io.FileOutputStream;`
+- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`: `import java.io.FileNotFoundException;`
+
 ### Setting Up SANTOS
 <a href="https://github.com/northeastern-datalab/santos">SANTOS</a> is a semantic table union search approach.
 Clone the repository and build the Docker image:
 
 ```bash
-git clone https://github.com/northeastern-datalab/santos.git
 docker build -t santos -f santos.dockerfile .
 ```
 
@@ -173,7 +189,6 @@ docker build -t santos -f santos.dockerfile .
 Clone the repository and build the Docker image:
 
 ```bash
-git clone https://github.com/megagonlabs/starmie.git
 docker build -t starmie -f starmie.dockerfile .
 ```
 
@@ -188,43 +203,54 @@ In an independent window, run a Docker container and start progressively indexin
 
 ```bash
 cd TableSearch/
+WT="../SemanticTableSearchDataset/table_corpus/tables_2019/"
+GT="../gittables/"
 mkdir -p queries/ tables/ data/output/ data/indexes/
 docker run -v $(pwd)/queries:/queries \
            -v $(pwd)/tables:/tables \
            -v $(pwd)/Thetis:/src -v $(pwd)/data:/data \
-           -v $(pwd)/../SemanticTableSearchDataset/table_corpus/tables_2019:/corpus \
+           -v $(pwd)/${WT}:/corpus \
            --network thetis_network -e NEO4J_HOST=$(docker exec thetis_neo4j hostname -I) \
            -it --rm thetis bash
 ```
 
+This will now set the corpus to Wikitables.
+To use GitTables, substitute the variable `${WT}` in the Docker command with `${GT}`.
+
 Then, start progressive indexing using types within the Docker container:
 
 ```bash
+WT_ROWS=10956092
+GT_ROWS=67774304
 cd src/
 mvn package -DskipTests
 java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
      --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/ \
      --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
-     -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
+     -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
 ```
 
 Alternatively, start progressive indexing using embeddings:
 
 ```bash
+WT_ROWS=10956092
+GT_ROWS=67774304
 cd src/
 mvn package -DskipTests
 java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop embeddings --embeddingSimilarityFunction abs_cos \
      --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/output/ \
      --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
-     -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
+     -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
 ```
+
+Once again, if GitTables are used as the corpus, substitute the variable `${WT_SIZE}` with `${GT_SIZE}`.
 
 ### Table Discoverability
 In this experiment, we evaluate how long it takes before a table that is inserted into the corpus becomes discoverable.
 Specifically, we insert a fixed number of tables at fixed time points and measure how long it takes for the newly inserted table to become retrievable.
 The number of tables to insert is a parameter.
 
-Run the above commands to start progressive indexing, and immediately start the following script and pass the number of tables to insert into the corpus.
+Run the above commands to start progressive indexing, and immediately start the following script, and pass the number of tables to insert into the corpus.
 
 ```bash
 ./discoverability.sh <NUM_TABLES>
