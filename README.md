@@ -171,18 +171,21 @@ try
 
 catch (FileNotFoundException ignored) {}
 ```
-- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`: 
-```javaimport com.thetis.system.Configuration;
+- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`:
+```java
+import com.thetis.system.Configuration;
 ```
 - `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`:
 ```java
-import java.io.PrintStream;```
+import java.io.PrintStream;
+```
 - `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`:
 ```java
 import java.io.FileOutputStream;
 ```
 - `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`:
-```javaimport java.io.FileNotFoundException;
+```java
+import java.io.FileNotFoundException;
 ```
 
 ### Setting Up SANTOS
