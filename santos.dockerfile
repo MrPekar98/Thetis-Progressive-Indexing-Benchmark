@@ -2,8 +2,8 @@ FROM ubuntu:20.04
 
 WORKDIR /home
 RUN apt update
-RUN apt install python3 pip wget zip openjdk-11-jdk -y
-ADD santos/ santos/
+RUN apt install python3 pip wget zip openjdk-11-jdk git -y
+RUN git clone https://github.com/northeastern-datalab/santos.git
 
 WORKDIR santos/
 RUN pip3 install -r requirements.txt
@@ -24,18 +24,19 @@ RUN python3 Yago_type_counter.py
 RUN python3 Yago_subclass_extractor.py
 RUN python3 Yago_subclass_score.py
 
-RUN mkdir /ground_truth
+RUN mkdir /ground_truth /wikitables /gittables
 WORKDIR /ground_truth
 ADD wikitables.txt .
 ADD gittables.txt .
 ADD santos_fd/ .
 RUN ./runFilesWT.sh
+RUN ./runFilesGT.sh
 
 WORKDIR /home/santos/codes
 ADD santos.sh .
 RUN rm data_lake_processing_yago.py query_santos.py
-ADD santos_data_lake_preprocessing_yago.py .
-ADD query_santos .
+ADD baseline_code/santos/santos_data_lake_preprocessing_yago.py .
+ADD baseline_code/santos/query_santos .
 ADD sub_corpus.py .
 
 ENTRYPOINT ./santos.sh

@@ -184,6 +184,12 @@ Clone the repository and build the Docker image:
 docker build -t santos -f santos.dockerfile .
 ```
 
+Unzip `santos_fd.zip`:
+
+```bash
+unzip santos_fd.zip
+```
+
 ### Setting Up Starmie
 <a href="https://github.com/megagonlabs/starmie">Starmie</a> is an approach for semantic data discovery based on learned column representations.
 Clone the repository and build the Docker image:

@@ -15,7 +15,7 @@ do
     fi
 
     mkdir ${SUB_CORPUS}
-    python3 sub_corpus.py  ${SUB_CORPUS}
+    python3 sub_corpus.py ${SUB_CORPUS}
 
     python3 santos_data_lake_preprocessing_yago.py ${CORPUS} ${SUB_CORPUS}
     python3 query_santos.py ${CORPUS} ${QUERY_SIZE}
@@ -24,6 +24,16 @@ do
 
     CURRENT_FRACTION=$((${CURRENT_FRACTION} + ${FRACTION}))
 done
+
+echo
+echo "Done"
+echo "Evaluating on full corpus"
+echo "Indexing..."
+python3 santos_data_lake_preprocessing_yago.py ${CORPUS} ${}
+
+echo
+echo "Querying..."
+python3 query_santos.py ${CORPUS} ${QUERY_SIZE}
 
 echo
 echo "Done"
