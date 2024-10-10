@@ -174,17 +174,8 @@ catch (FileNotFoundException ignored) {}
 - `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`:
 ```java
 import com.thetis.system.Configuration;
-```
-- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`:
-```java
 import java.io.PrintStream;
-```
-- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`:
-```java
 import java.io.FileOutputStream;
-```
-- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 24`:
-```java
 import java.io.FileNotFoundException;
 ```
 
@@ -242,7 +233,7 @@ WT_ROWS=10956092
 GT_ROWS=67774304
 cd src/
 mvn package -DskipTests
-java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
+java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop types \
      --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/ \
      --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
      -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
@@ -255,7 +246,7 @@ WT_ROWS=10956092
 GT_ROWS=67774304
 cd src/
 mvn package -DskipTests
-java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop embeddings --embeddingSimilarityFunction abs_cos \
+java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop embeddings --embeddingSimilarityFunction abs_cos \
      --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/output/ \
      --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
      -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
@@ -264,17 +255,19 @@ java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop embeddings --
 Once again, if GitTables are used as the corpus, substitute the variable `${WT_SIZE}` with `${GT_SIZE}`.
 
 ### Table Discoverability
-In this experiment, we evaluate how long it takes before a table that is inserted into the corpus becomes discoverable.
+In this experiment, we evaluate how long it takes before a new table that is inserted into the corpus during indexing becomes discoverable.
 Specifically, we insert a fixed number of tables at fixed time points and measure how long it takes for the newly inserted table to become retrievable.
 The number of tables to insert is a parameter.
 
-Run the above commands to start progressive indexing, and immediately start the following script, and pass the number of tables to insert into the corpus.
+Run the above commands to start progressive indexing, and immediately start the following script, and pass the name of the corpus (`wikitables` or `gittables`).
 
 ```bash
-./discoverability.sh <NUM_TABLES>
+touch TableSearch/data/log.txt
+python discoverability.py <NUMBER_OF_TABLES> <CORPUS>
 ```
 
-The results are stored in `results/discoverability/`.
+Note that there is a total of 1000 tables to insert.
+The results are stored in `results/discoverability/discovered_times.txt`.
 
 ### Ranking Quality
 We measure the ranking quality using NDCG during the early stages of progressive indexing.
@@ -283,7 +276,7 @@ Specifically, we focus on querying the baselines in the very early stages of pro
 
 #### Thetis
 Start progressive indexing in Thetis, as described above, and run immediately the following script to start the experiment.
-Pass a period in seconds that indicates how long to wait until we execute a query again.
+Pass a period in fractions that indicates how much data to index until we execute queries again.
 Pass also the number of queries to execute at every time point.
 Note that the resource comes with more than 2K queries for this corpus, by we suggest you use a much smaller number of queries, e.g., 10.
 
@@ -350,9 +343,6 @@ To run the experiment, run the Docker container, and pass the fraction of data t
 ```bash
 mkdir -p santos_results/
 docker run --rm -v ${PWD}/santos_results:/results \
-           -v ${PWD}/SemanticTableSearchDataset/table_corpus/csv_tables_2019:/wikitables \
-           -v ${PWD}/gittables_csv:/gittables \
-           -v ${PWD}/queries:/queries \
            -e FRACTION=<insert fraction> \
            -e FRACTION_LIMIT=<insert limit> \
            -e QUERY_SIZE=<insert query size> \
