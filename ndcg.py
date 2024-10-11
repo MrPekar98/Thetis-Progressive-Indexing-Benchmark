@@ -20,7 +20,7 @@ def ranking_ndcg(result_file, ground_truth_file, corpus):
 
             result_scores[table['tableID']] = score
 
-    with open(groun_truth_file, 'r') as handle:
+    with open(ground_truth_file, 'r') as handle:
         obj = json.load(handle)
 
         for table in obj['scores']:
@@ -39,15 +39,17 @@ gt_dir = 'results/ground_truth/'
 results = 'results/ranking/'
 time_points = os.listdir(results)
 query_ids = os.listdir(gt_dir)
+k = 10
 
 with open('ndcg.txt', 'w') as handle:
     for time_point in time_points:
         handle.write(time_point + 's\n')
 
         for query_id in query_ids:
-            result_file = results + time_point + '/' query_id + '/filenameToScore.json'
+            result_file = results + time_point + '/' + query_id + '/filenameToScore.json'
             ground_truth_file = gt_dir + query_id + '/filenameToScore.json'
-            ndcg = ranking_ndcg(result_file, ground_truth_file, corpus)
+            scores = ranking_ndcg(result_file, ground_truth_file, corpus)
+            ndcg = ndcg_score(np.array([scores[1]]), np.array([scores[0]]), k = k)
             handle.write(str(ndcg) + '\n')
 
         handle.write('\n')
