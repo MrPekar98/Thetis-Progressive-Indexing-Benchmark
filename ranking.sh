@@ -7,24 +7,49 @@ NUM_QUERIES=$2
 OUTPUT_DIR="results/ranking/"
 QUERY_DIR="SemanticTableSearchDataset/queries/2019/1_tuples_per_query/"
 THETIS_QUERY_DIR="TableSearch/queries/"
-THETIS_OUTPUT_DIR="TableSearch/data/search_output/"
+THETIS_OUTPUT_DIR="TableSearch/data/output/search_output/"
+
+fraction()
+{
+    FILE="$1"
+    CHECK_STR="INFO: Indexed"
+    LINE=""
+    INDEXED=""
+
+    while [[ ${LINE} != *"${CHECK_STR}"* ]]
+    do
+        LINE=$(grep "${CHECK_STR}" ${FILE} | tail -n 1)
+        INDEXED=(${LINE// / })
+        INDEXED=${INDEXED[9]:0:4}
+    done
+
+    echo ${INDEXED}
+}
 
 mkdir -p ${OUTPUT_DIR}
+sleep 2s
 
-if [[ ${PERIOD} < 1 || ${NUM_QUERIES} < 1 ]]
+if [[ ${PERIOD} < 0 ]]
 then
-    echo "Number of queries and period must be at least 1"
+    echo "Period (data index fraction) must be greater than 0"
+    exit 1
+elif [[ ${NUM_QUERIES} < 1 ]]
+then
+    echo "Number of queries must be at least 1"
     exit 1
 fi
 
-START=$(date +%s)
+LOG_FILE="TableSearch/data/log.txt"
+START=$(fraction ${LOG_FILE})
 CURRENT=${START}
-LIMIT=$(date -ud "30 minute" +%s)
+PREV=${CURRENT}
+LIMIT="30.00"
+ITERATION=0
 
-while [[ $(date -u +%s) -le ${LIMIT} ]]
+while [ $(echo "${CURRENT} < ${LIMIT}" | bc -l) ]
 do
     COUNT=0
-    echo "Adding ${NUM_QUERIES} to the query queue at time point $((${CURRENT} - ${START}))s"
+    echo "Adding ${NUM_QUERIES} to the query queue at fraction point ${CURRENT}"
 
     for QUERY in "${QUERY_DIR}"* ;\
     do
@@ -37,11 +62,23 @@ do
         fi
     done
 
-    sleep ${PERIOD}s
-    mkdir -p "${OUTPUT_DIR}$((${CURRENT} - ${START}))/"
-    cp -r "${THETIS_OUTPUT_DIR}"* "${OUTPUT_DIR}$((${CURRENT} - ${START}))/"
+    while (( $(echo "$(bc -l <<< "${CURRENT}-${PREV}") < ${PERIOD}" | bc -l) ))
+    do
+        sleep 1s
+        CURRENT=$(fraction ${LOG_FILE})
+    done
 
-    CURRENT=$(date +%s)
+    PREV=${CURRENT}
+    FOLDER_NAME=$(echo "${PERIOD} * ${ITERATION}" | bc -l)
+
+    if [[ ${FOLDER_NAME} == "."* ]]
+    then
+        FOLDER_NAME="0${FOLDER_NAME}"
+    fi
+
+    mkdir -p "${OUTPUT_DIR}${FOLDER_NAME}/"
+    cp -r "${THETIS_OUTPUT_DIR}"* "${OUTPUT_DIR}${FOLDER_NAME}/"
+    ITERATION=$((${ITERATION} + 1))
 done
 
 echo

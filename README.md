@@ -297,7 +297,7 @@ do
     COUNT=$((${COUNT} + 1))
     cp ${QUERY} TableSearch/queries/
 
-    if [[ ${COUNT} == <INSERT NUMBER OF QUERIES HERE> ]]
+    if [[ ${COUNT} == "<INSERT NUMBER OF QUERIES HERE>" ]]
     then
         break
     fi
@@ -317,21 +317,21 @@ Run the following script to perform searching in Thetis.
 RESULT_DIR="/data/ground_truth/"
 mkdir -p ${RESULT_DIR}
 
-for QUERY in "/queries/"* ;\
-do
-    java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 10 \
-         -q ${QUERY} -td /corpus/ -i /data/indexes/ -od ${RESULT_DIR} --embeddingSimilarityFunction abs_cos \
-         --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn -pf hnsh
-done
+java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 10 \
+     -q /queries/ -td /corpus/ -i /data/indexes/ -od ${RESULT_DIR} --embeddingSimilarityFunction abs_cos \
+     --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn -pf HNSW \
+     -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
 ```
 
 Now, evaluate the ranking using NDCG by running the Python script:
 
 ```bash
 mkdir -p results/ground_truth/
-mv TableSearch/data/ground_truth/search_output/* results/ground_truth/
+cp -r TableSearch/data/ground_truth/search_output/* results/ground_truth/
 python ndcg.py
 ```
+
+The results are now stored in `ndcg.txt`.
 
 #### SANTOS
 We perform an experiment to evaluate the ranking using SANTOS during progressive and adaptive indexing.
