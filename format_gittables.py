@@ -35,7 +35,7 @@ for parquet_file in parquet_files:
     try:
         df = pd.read_parquet(dir + parquet_file)
         rows, cols = df.shape
-        j = {'id': id, 'pgId': 1, 'numDataRows': rows, 'numCols': cols, 'pgTitle': parquet_file.split('.')[0], 'numNumericCols': 0, 'tableCaption': '', 'headers': [], 'rows': []}
+        j = {'_id': id, 'pgId': 1, 'numDataRows': rows, 'numCols': cols, 'pgTitle': parquet_file.split('.')[0], 'numNumericCols': 0, 'tableCaption': '', 'headers': [], 'rows': []}
         headers = list(df.columns.values)
 
         for header in headers:
