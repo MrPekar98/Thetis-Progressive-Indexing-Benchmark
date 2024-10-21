@@ -253,6 +253,7 @@ java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop embeddings -
 ```
 
 Once again, if GitTables are used as the corpus, substitute the variable `${WT_SIZE}` with `${GT_SIZE}`.
+Additionally, add the parameter `-link lucene` to use Lucene for entity linking, as GitTables do not come with ground truth entity links.
 
 ### Table Discoverability
 In this experiment, we evaluate how long it takes before a new table that is inserted into the corpus during indexing becomes discoverable.
@@ -285,6 +286,9 @@ Note that the resource comes with more than 2K queries for this corpus, by we su
 ```
 
 The results are stored in `results/ranking/`.
+Note that, when using the GitTables corpus, Lucene is applied as the entity lnker.
+This linker must be indexes before becoming operational.
+Therefore, start the ranking experiment when the `TableSearch/data/log.txt` mentions that the entity linking has completed.
 
 Before evaluating ranking, the ground truth must be established.
 Copy the same number of queries to the `TableSearch/queries/` directory with the following script:
@@ -369,4 +373,33 @@ docker run --rm -v ${PWD}/starmie_results:/results \
 ```
 
 The results can now be found in `starmie_results/`.
+Now some plotting...
+
+#### Chained Ranking
+We perform an experiment in Thetis, where we use a top-10 for each query to construct a new query, which we then execute and evaluate its performance.
+We keep doing this until reaching a threshold of indexed data.
+We allow the experiment to choose a top-10 table that has already been a query before.
+
+Build the Docker image and run a container:
+
+```bash
+LOW_TYPE="low"
+HIGH_TYPE="high"
+WT="wikitables"
+GT="gittables"
+docker build -f chained_ranking.dockerfile -t chained_ranking .
+docker run --rm -it -v ${PWD}/results:/results -v ${PWD}/TableSearch:/TableSearch/ \
+           -v ${PWD}/queries:/queries --network thetis_network \
+           -v ${PWD}/SemanticTableSearchDataset/table_corpus/tables_2019:/wikitables \
+           -v ${PWD}/gittables:/gittables \
+           -e NEO4J_HOST=$(docker exec thetis_neo4j hostname -I) \
+           -e TYPE=${LOW_TYPE} \
+           -e CORPUS=${WT}
+           chained_ranking
+```
+
+Choose `${HIGH_TYPE}` or `${LOW_TYPE}` for the `TYPE` variable depending on whether to execute queries with high result set overlap or low.
+Choose `${WT}` or `${GT}` for the `CORPUS` variable to choose the Wikitables or GitTables corpus for the experiment.
+
+The results are now stored `results/chained_ranking/`.
 Now some plotting...
