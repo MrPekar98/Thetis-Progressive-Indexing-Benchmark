@@ -19,8 +19,8 @@ fraction()
     echo ${INDEXED}
 }
 
-PERIOD="1.0"
-RESULT_DIR="/results/chained_ranking/"
+PERIOD="2.0"
+RESULT_DIR="/results/chained_ranking_${TYPE}_overlap/"
 INITIAL_QUERIES="initial_queries/"
 EXP_QUERIES="experiment_queries/"
 THETIS_DIR="/TableSearch/"
@@ -40,6 +40,11 @@ fi
 
 INITIAL_QUERIES="${INITIAL_QUERIES}${TYPE}_overlap/"
 
+if [ -d ${RESULT_DIR} ]
+then
+    rm -r ${RESULT_DIR}
+fi
+
 mkdir -p ${RESULT_DIR} ${EXP_QUERIES}
 cp ${INITIAL_QUERIES}* ${EXP_QUERIES}
 sleep 2s
@@ -49,7 +54,7 @@ CURRENT=${START}
 PREV=${CURRENT}
 LIMIT="30.00"
 ITERATION=0
-NUM_QUERIES=$(ls ${QUERY_DIR} | wc -l)
+NUM_QUERIES=$(ls ${INITIAL_QUERIES} | wc -l)
 CORPUS_DIR="/wikitables/"
 
 if [[ ${CORPUS} == "gittables" ]]
@@ -66,32 +71,41 @@ do
     do
         sleep 1s
         CURRENT=$(fraction ${LOG_FILE})
+
+        # Sometimes, the function 'fraction' returns a wrong and unrealistic value
+        while [[ ${CURRENT} != *"."* ]]
+        do
+            sleep 1s
+            CURRENT=$(fraction ${LOG_FILE})
+        done
     done
+
+    if [ $(ls ${QUERY_DIR} | wc -l) -gt 0 ]
+    then
+        rm "${QUERY_DIR}"*
+    fi
 
     PREV=${CURRENT}
     mv ${EXP_QUERIES}* ${QUERY_DIR}
-
-    # Wait until all queries have been executed
-    EXECUTED=$(ls ${OUTPUT_DIR} | wc -l)
     echo "Executing queries in iteration ${ITERATION} after having indexed ${CURRENT}% of the data"
 
-    while [ ${EXECUTED} -ne ${NUM_QUERIES} ]
+    # Wait until all queries have been executed
+    while [ $(ls ${QUERY_DIR} | wc -l) -gt 0 ]
     do
-        sleep 2s
-        EXECUTED=$(ls ${OUTPUT_DIR} | wc -l)
+        sleep 10s
     done
 
-    PROGRESS==$(echo "${PERIOD} * ${ITERATION}" | bc -l)
+    PROGRESS=$(echo "${PERIOD} * ${ITERATION}" | bc -l)
     mkdir -p "${RESULT_DIR}${PROGRESS}"
-    mv ${OUTPUT_DIR}* "${RESULT_DIR}${PROGRESS}"
     echo "Saving results and constructing new queries"
+    mv ${OUTPUT_DIR}* "${RESULT_DIR}${PROGRESS}/"
 
     # Construct new queries
-    for RESULT in "${RESULT_DIR}${PROGRESS}"* ;\
+    for RESULT in "${RESULT_DIR}${PROGRESS}/"* ;\
     do
         OUTPUT_FILE="null"
         INDEX=0
-        RESULT_FILE="${RESULT}filenameToScore.json"
+        RESULT_FILE="${RESULT}/filenameToScore.json"
 
         while [ ! -f ${OUTPUT_FILE} ]
         do
@@ -108,3 +122,6 @@ do
         done
     done
 done
+
+echo
+echo "Done. Reached indexing limit ${LIMIT}"

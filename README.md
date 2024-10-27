@@ -380,21 +380,26 @@ We perform an experiment in Thetis, where we use a top-10 for each query to cons
 We keep doing this until reaching a threshold of indexed data.
 We allow the experiment to choose a top-10 table that has already been a query before.
 
-Build the Docker image and run a container:
+Build the Docker image:
+
+```bash
+docker build -f chained_ranking.dockerfile -t chained_ranking .
+```
+
+Start progressive indexing in Thetis, as described above, and run immediately the following commands to start the experiment.
 
 ```bash
 LOW_TYPE="low"
 HIGH_TYPE="high"
 WT="wikitables"
 GT="gittables"
-docker build -f chained_ranking.dockerfile -t chained_ranking .
 docker run --rm -it -v ${PWD}/results:/results -v ${PWD}/TableSearch:/TableSearch/ \
            -v ${PWD}/queries:/queries --network thetis_network \
            -v ${PWD}/SemanticTableSearchDataset/table_corpus/tables_2019:/wikitables \
            -v ${PWD}/gittables:/gittables \
            -e NEO4J_HOST=$(docker exec thetis_neo4j hostname -I) \
            -e TYPE=${LOW_TYPE} \
-           -e CORPUS=${WT}
+           -e CORPUS=${WT} \
            chained_ranking
 ```
 
