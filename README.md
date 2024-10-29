@@ -406,5 +406,46 @@ docker run --rm -it -v ${PWD}/results:/results -v ${PWD}/TableSearch:/TableSearc
 Choose `${HIGH_TYPE}` or `${LOW_TYPE}` for the `TYPE` variable depending on whether to execute queries with high result set overlap or low.
 Choose `${WT}` or `${GT}` for the `CORPUS` variable to choose the Wikitables or GitTables corpus for the experiment.
 
-The results are now stored `results/chained_ranking/`.
-Now some plotting...
+The results are now stored `results/chained_ranking_<OVERLAP_TYPE>_overlap/`.
+We now construct the ground truth by executing all of the queries with fully constructed indexes.
+Run the following command to construct the queries to run:
+
+```bash
+docker run --rm -v ${PWD}/TableSearch:/TableSearch \
+           -v ${PWD}/SemanticTableSearchDataset/table_corpus/tables_2019:/wikitables \
+           -v ${PWD}/gittables:/gittables \
+           -v ${PWD}/results:/results \
+           -v ${PWD}/queries:/queries \
+           --network thetis_network \
+           -e NEO4J_HOST=$(docker exec thetis_neo4j hostname -I) \
+           chained_ranking bash -c "python3 chained_ranking_gt.py <OVERLAP_TYPE> <CORPUS_NAME>"
+```
+
+Substitute `<OVERLAP_TYPE>` with either `high` or `low`, depending on the type of queries that were used for the experiment.
+Substitute `<CORPUS_NAME>` with either `wikitables` or `gittables`, depending on the corpus used in the experiment.
+Now, run the following command within the Thetis Docker container to start searching with the queries:
+
+```bash
+WT="../SemanticTableSearchDataset/table_corpus/tables_2019/"
+GT="../gittables/"
+mkdir -p /data/gt_results/
+java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 10 \
+     -q /queries/ -td /corpus/ -i /data/indexes/ -od /data/gt_results/ \
+     -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin \
+     --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn
+rm /queries/*
+```
+
+Once completed, you can run the following command to plot the experiment results:
+
+```bash
+mkdir -p results/chained_ground_truth/
+cp -r TableSearch/data/gt_results/search_output/* results/chained_ground_truth/
+docker run --rm -v ${PWD}/SemanticTableSearchDataset/table_corpus/tables_2019:/wikitables \
+           -v ${PWD}/gittables:/gittables \
+           -v ${PWD}/results:/results \
+           chained_ranking bash -c "python3 chained_ndcg.py <OVERLAP_TYPE> <CORPUS_NAME>"
+mv results/chained_ndcg.txt .
+```
+
+The results are now stored in `chained_ndcg.txt`.
