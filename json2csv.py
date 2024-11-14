@@ -1,3 +1,5 @@
+# Converts JSON corpus tables to CSV tables
+
 import os
 import json
 import csv

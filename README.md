@@ -187,12 +187,6 @@ Clone the repository and build the Docker image:
 docker build -t santos -f santos.dockerfile .
 ```
 
-Unzip `santos_fd.zip`:
-
-```bash
-unzip santos_fd.zip
-```
-
 ### Setting Up Starmie
 <a href="https://github.com/megagonlabs/starmie">Starmie</a> is an approach for semantic data discovery based on learned column representations.
 Clone the repository and build the Docker image:
@@ -233,9 +227,9 @@ WT_ROWS=10956092
 GT_ROWS=67774304
 cd src/
 mvn package -DskipTests
-java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop types \
+java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
      --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/ \
-     --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
+     --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity \
      -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
 ```
 
@@ -246,9 +240,9 @@ WT_ROWS=10956092
 GT_ROWS=67774304
 cd src/
 mvn package -DskipTests
-java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop embeddings --embeddingSimilarityFunction abs_cos \
+java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop embeddings --embeddingSimilarityFunction abs_cos \
      --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/output/ \
-     --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
+     --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity \
      -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
 ```
 
@@ -323,7 +317,7 @@ mkdir -p ${RESULT_DIR}
 
 java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 10 \
      -q /queries/ -td /corpus/ -i /data/indexes/ -od ${RESULT_DIR} --embeddingSimilarityFunction abs_cos \
-     --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn -pf HNSW \
+     --singleColumnPerQueryEntity --adjustedSimilarity -pf HNSW \
      -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
 ```
 
@@ -408,7 +402,7 @@ Choose `${WT}` or `${GT}` for the `CORPUS` variable to choose the Wikitables or 
 
 The results are now stored `results/chained_ranking_<OVERLAP_TYPE>_overlap/`.
 We now construct the ground truth by executing all of the queries with fully constructed indexes.
-Run the following command to construct the queries to run:
+Run the following command to construct the queries to execute:
 
 ```bash
 docker run --rm -v ${PWD}/TableSearch:/TableSearch \
@@ -432,15 +426,20 @@ mkdir -p /data/gt_results/
 java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 10 \
      -q /queries/ -td /corpus/ -i /data/indexes/ -od /data/gt_results/ \
      -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin \
-     --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn
+     --singleColumnPerQueryEntity --adjustedSimilarity
 rm /queries/*
 ```
 
-Once completed, you can run the following command to plot the experiment results:
+Outside the container, copy the results to the `results/` directory:
 
 ```bash
 mkdir -p results/chained_ground_truth/
 cp -r TableSearch/data/gt_results/search_output/* results/chained_ground_truth/
+```
+
+Finally, you can run the following command to plot the experiment results:
+
+```bash
 docker run --rm -v ${PWD}/SemanticTableSearchDataset/table_corpus/tables_2019:/wikitables \
            -v ${PWD}/gittables:/gittables \
            -v ${PWD}/results:/results \

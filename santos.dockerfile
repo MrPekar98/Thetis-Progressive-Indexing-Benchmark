@@ -1,6 +1,11 @@
 FROM ubuntu:20.04
 
 WORKDIR /home
+ADD queries/ /queries
+# TODO: Add script to run that can convert the queries from 'queries/' into CSV queries
+ADD SemanticTableSearchDataset/table_corpus/csv_tables_2019/ /wikitables
+ADD gittables_csv/ /gittables
+
 RUN apt update
 RUN apt install python3 pip wget zip openjdk-11-jdk git -y
 RUN git clone https://github.com/northeastern-datalab/santos.git
@@ -24,13 +29,28 @@ RUN python3 Yago_type_counter.py
 RUN python3 Yago_subclass_extractor.py
 RUN python3 Yago_subclass_score.py
 
-RUN mkdir /ground_truth /wikitables /gittables
-WORKDIR /ground_truth
+WORKDIR ../ground_truth/
+ADD santos_fd.zip .
+RUN unzip santos_fd.zip
+
+WORKDIR santos_fd/
 ADD wikitables.txt .
 ADD gittables.txt .
-ADD santos_fd/ .
 RUN ./runFilesWT.sh
+RUN python3 sortFDs_pickle_file_dict.py wikitables
+RUN mv wikitables_FD_filedict.pickle ..
+RUN python3 gen_union.py /queries/5-row/ /wikitables/ wikitables
+RUN mv wikitablesUnionBenchmark.pickle ..
+RUN python3 gen_intent_columns.py wikitables
+RUN mv wikitablesIntentColumnBenchmark.pickle ..
+RUN rm -r results/ entity_weights.json
 RUN ./runFilesGT.sh
+RUN python3 sortFDs_pickle_file_dict.py gittables
+RUN mv gittables_FD_filedict.pickle ..
+RUN python3 gen_union.py /queries/5-row/ /gittables/ gittables
+RUN mv gittablesUnionBenchmark.pickle ..
+RUN python3 gen_intent_columns.py gittables
+RUN mv gittablesIntentColumnBenchmark.pickle ..
 
 WORKDIR /home/santos/codes
 ADD santos.sh .
@@ -39,4 +59,5 @@ ADD baseline_code/santos/santos_data_lake_preprocessing_yago.py .
 ADD baseline_code/santos/query_santos .
 ADD sub_corpus.py .
 
-ENTRYPOINT ./santos.sh
+CMD []
+#ENTRYPOINT ./santos.sh
