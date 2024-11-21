@@ -195,6 +195,30 @@ Clone the repository and build the Docker image:
 docker build -t starmie -f starmie.dockerfile .
 ```
 
+### Setting Up MATE
+<a href="https://github.com/LUH-DBS/MATE/tree/main">MATE</a> is a table join search approach.
+Clone the repository:
+
+```bash
+git clone https://github.com/LUH-DBS/MATE.git
+```
+
+Start a Vertica Docker instance:
+
+```bash
+docker network create mate_network
+docker pull vertica/vertica-ce
+docker run -d -p 5433:5433 -p 5444:5444 \
+           --mount type=volume,source=vertica-data,target=/data \
+           --name vertica_ce vertica/vertica-ce
+```
+
+Build the MATE image:
+
+```bash
+docker build -t mate -f mate.dockerfile .
+```
+
 ## Experiments
 Run the following command to create the set of queries for the experiments, and pass the number of queries you wish to use in the experiments:
 
