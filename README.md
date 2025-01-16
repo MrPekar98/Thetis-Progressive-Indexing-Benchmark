@@ -161,7 +161,7 @@ You can now exit the Thetis Docker container with `Ctrl+D` and go back to the re
 
 Finally, insert the following code:
 
-- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 195`:
+- `TableSearch/Thetis/src/main/java/com/thetis/commands/ProgressiveIndexing.java: 196`:
 ```java
 try
 {
@@ -251,7 +251,7 @@ WT_ROWS=10956092
 GT_ROWS=67774304
 cd src/
 mvn package -DskipTests
-java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop types \
+java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop types \
      --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/ \
      --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity \
      -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
@@ -264,7 +264,7 @@ WT_ROWS=10956092
 GT_ROWS=67774304
 cd src/
 mvn package -DskipTests
-java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 10 -prop embeddings --embeddingSimilarityFunction abs_cos \
+java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop embeddings --embeddingSimilarityFunction abs_cos \
      --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/output/ \
      --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity \
      -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
@@ -297,14 +297,14 @@ Specifically, we focus on querying the baselines in the very early stages of pro
 Start progressive indexing in Thetis, as described above, and run immediately the following script to start the experiment.
 Pass a period in fractions that indicates how much data to index until we execute queries again.
 Pass also the number of queries to execute at every time point.
-Note that the resource comes with more than 2K queries for this corpus, by we suggest you use a much smaller number of queries, e.g., 10.
+Note that the resource comes with more than 2K queries for this corpus, so we suggest you use a much smaller number of queries, e.g., 10.
 
 ```bash
 ./ranking.sh <PERIOD> <NUM_QUERIES>
 ```
 
 The results are stored in `results/ranking/`.
-Note that, when using the GitTables corpus, Lucene is applied as the entity lnker.
+Note that, when using the GitTables corpus, Lucene is applied as the entity linker.
 This linker must be indexes before becoming operational.
 Therefore, start the ranking experiment when the `TableSearch/data/log.txt` mentions that the entity linking has completed.
 
@@ -339,7 +339,7 @@ Run the following script to perform searching in Thetis.
 RESULT_DIR="/data/ground_truth/"
 mkdir -p ${RESULT_DIR}
 
-java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 10 \
+java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 100 \
      -q /queries/ -td /corpus/ -i /data/indexes/ -od ${RESULT_DIR} --embeddingSimilarityFunction abs_cos \
      --singleColumnPerQueryEntity --adjustedSimilarity -pf HNSW \
      -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
@@ -447,7 +447,7 @@ Now, run the following command within the Thetis Docker container to start searc
 WT="../SemanticTableSearchDataset/table_corpus/tables_2019/"
 GT="../gittables/"
 mkdir -p /data/gt_results/
-java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 10 \
+java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 100 \
      -q /queries/ -td /corpus/ -i /data/indexes/ -od /data/gt_results/ \
      -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin \
      --singleColumnPerQueryEntity --adjustedSimilarity
