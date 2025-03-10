@@ -30,7 +30,7 @@ for file in files:
         try:
             table = json.load(in_handle)
 
-            with open(out_dir + file, 'w') as out_handle:
+            with open(out_dir + file.replace('.json', '.csv'), 'w') as out_handle:
                 writer = csv.writer(out_handle)
                 headers = []
 
