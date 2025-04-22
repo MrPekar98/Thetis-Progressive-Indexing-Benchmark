@@ -1,3 +1,5 @@
+# Generates CSV table queries from JSON queries
+
 import os
 import json
 import csv

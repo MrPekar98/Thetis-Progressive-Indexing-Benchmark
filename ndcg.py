@@ -46,7 +46,7 @@ with open('ndcg.txt', 'w') as handle:
         handle.write(fraction + '%\n')
 
         for query_id in query_ids:
-            result_file = results + fractiont + '/' + query_id + '/filenameToScore.json'
+            result_file = results + fraction + '/' + query_id + '/filenameToScore.json'
             ground_truth_file = gt_dir + query_id + '/filenameToScore.json'
             scores = ranking_ndcg(result_file, ground_truth_file, corpus)
             ndcg = ndcg_score(np.array([scores[1]]), np.array([scores[0]]), k = k)

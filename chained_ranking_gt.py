@@ -30,8 +30,8 @@ for indexing_point in indexing_points:
         file_ids.add(id)
 
 for file_id in file_ids:
-    if 'wikipage' in file_id:
+    if 'wikipage' in file_id and os.path.exists('/queries/' + overlap_type + '_overlap/' + file_id + '.json'):
         shutil.copy('/queries/' + overlap_type + '_overlap/' + file_id + '.json', query_dir + file_id + '.json')
 
-    else:
+    elif os.path.exists(corpus + file_id + '.json'):
         os.system('python3 to_query.py ' + corpus + file_id + '.json ' + query_dir + file_id + '.json')

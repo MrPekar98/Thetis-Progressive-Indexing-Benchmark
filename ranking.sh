@@ -14,15 +14,13 @@ fraction()
     FILE="$1"
     CHECK_STR="INFO: Indexed"
     LINE=""
-    INDEXED=""
 
     while [[ ${LINE} != *"${CHECK_STR}"* ]]
     do
         LINE=$(grep "${CHECK_STR}" ${FILE} | tail -n 1)
-        INDEXED=(${LINE// / })
-        INDEXED=${INDEXED[9]:0:4}
     done
 
+    INDEXED=$(echo "$LINE" | grep -oP '\d+\.\d+(?=%)')
     echo ${INDEXED}
 }
 
@@ -49,7 +47,7 @@ ITERATION=0
 while [ $(echo "${CURRENT} < ${LIMIT}" | bc -l) ]
 do
     COUNT=0
-    echo "Adding ${NUM_QUERIES} to the query queue at fraction point ${CURRENT}"
+    echo "Adding ${NUM_QUERIES} queries to the query queue at fraction point ${CURRENT}"
 
     for QUERY in "${QUERY_DIR}"* ;\
     do
@@ -62,10 +60,13 @@ do
         fi
     done
 
-    while (( $(echo "$(bc -l <<< "${CURRENT}-${PREV}") < ${PERIOD}" | bc -l) ))
+    DIFF=$(echo "${CURRENT} - ${PREV}" | bc)
+
+    while (( $(echo "${DIFF} < ${PERIOD}" | bc -l) ))
     do
         sleep 1s
         CURRENT=$(fraction ${LOG_FILE})
+        DIFF=$(echo "${CURRENT} - ${PREV}" | bc)
     done
 
     PREV=${CURRENT}

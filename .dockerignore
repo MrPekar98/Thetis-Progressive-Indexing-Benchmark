@@ -2,3 +2,5 @@ SemanticTableSearchDataset/*
 !SemanticTableSearchDataset/table_corpus/csv_tables_2019/
 gittables/
 files/
+priority_experiment/
+TableSearch/

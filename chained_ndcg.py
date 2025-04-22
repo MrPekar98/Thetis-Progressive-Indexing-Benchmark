@@ -75,7 +75,7 @@ with open('/results/chained_ndcg.txt', 'w') as handle:
             result_file = result_dir + fraction + '/' + result + '/filenameToScore.json'
             gt_file = gt_dir + result + '/filenameToScore.json'
             scores = ranking_ndcg(result_file, gt_file, corpus_files)
-            ndcg = ndcg_score(np.array([scores[1]]), np.array([scores[0]]), k = 10)
+            ndcg = ndcg_score(np.array([scores[1]]), np.array([scores[0]]), k = 100)
             handle.write(str(ndcg) + '\n')
 
         handle.write('\n')

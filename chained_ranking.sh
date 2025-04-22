@@ -7,15 +7,13 @@ fraction()
     FILE="$1"
     CHECK_STR="INFO: Indexed"
     LINE=""
-    INDEXED=""
 
     while [[ ${LINE} != *"${CHECK_STR}"* ]]
     do
         LINE=$(grep "${CHECK_STR}" ${FILE} | tail -n 1)
-        INDEXED=(${LINE// / })
-        INDEXED=${INDEXED[9]:0:4}
     done
 
+    INDEXED=$(echo "$LINE" | grep -oP '\d+\.\d+(?=%)')
     echo ${INDEXED}
 }
 
@@ -92,16 +90,15 @@ do
     # Wait until all queries have been executed
     while [ $(ls ${QUERY_DIR} | wc -l) -gt 0 ]
     do
-        sleep 10s
+        sleep 3s
     done
 
-    PROGRESS=$(echo "${PERIOD} * ${ITERATION}" | bc -l)
-    mkdir -p "${RESULT_DIR}${PROGRESS}"
+    mkdir -p "${RESULT_DIR}${CURRENT}"
     echo "Saving results and constructing new queries"
-    mv ${OUTPUT_DIR}* "${RESULT_DIR}${PROGRESS}/"
+    mv ${OUTPUT_DIR}* "${RESULT_DIR}${CURRENT}/"
 
     # Construct new queries
-    for RESULT in "${RESULT_DIR}${PROGRESS}/"* ;\
+    for RESULT in "${RESULT_DIR}${CURRENT}/"* ;\
     do
         OUTPUT_FILE="null"
         INDEX=0
