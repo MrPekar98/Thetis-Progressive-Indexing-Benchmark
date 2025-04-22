@@ -1,4 +1,4 @@
-# Jazero Progressive Indexing Benchmark
+# Thetis Progressive Indexing Benchmark
 A benchmark to evaluate progressive indexing in Jazero.
 
 ## Setup
@@ -141,6 +141,8 @@ Now, enter the `TableSearch/` directory and start a Docker container with Thetis
 docker build -t thetis .
 docker run --rm -it -v $(pwd)/Thetis:/src \
     -v $(pwd)/data:/data \
+    -v $(pwd)/../SemanticTableSearchDataset/table_corpus/tables_2019/:/wikitables \
+    -v $(pwd)/../gittables/:/gittables \
     --network thetis_network \
     -e POSTGRES_HOST=$(docker exec db hostname -I) \
     thetis bash
@@ -155,6 +157,14 @@ java -jar target/Thetis.0.1.jar embedding \
     -f /data/embeddings/vectors.txt \
     -db postgres -h ${POSTGRES_HOST} \
     -p 5432 -dbn embeddings -u admin -pw 1234 -dp
+```
+
+Now, load the indexes for Wikitables and GitTables.
+
+```bash
+mkdir -p /data/wikitables_indexes /data/gittables_indexes
+java -Xms25g -jar target/Thetis.0.1.jar index --table-dir /wikitables --output-dir /data/wikitables_indexes -t 4 -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
+java -Xms25g -jar target/Thetis.0.1.jar index --table-dir /gittables --output-dir /data/gittables_indexes -t 4 -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
 ```
 
 You can now exit the Thetis Docker container with `Ctrl+D` and go back to the repository root directory.
@@ -181,19 +191,23 @@ import java.io.FileNotFoundException;
 
 ### Setting Up SANTOS
 <a href="https://github.com/northeastern-datalab/santos">SANTOS</a> is a semantic table union search approach.
-Clone the repository and build the Docker image:
+Setup the SANTOS environment in a Docker image with the following command:
 
 ```bash
 docker build -t santos -f santos.dockerfile .
 ```
 
+Note that is a lenghty process.
+
 ### Setting Up Starmie
 <a href="https://github.com/megagonlabs/starmie">Starmie</a> is an approach for semantic data discovery based on learned column representations.
-Clone the repository and build the Docker image:
+Setup the Starmie environment in a Docker image with the following command:
 
 ```bash
 docker build -t starmie -f starmie.dockerfile .
 ```
+
+Note that this is a lengthy process.
 
 ### Setting Up MATE
 <a href="https://github.com/LUH-DBS/MATE/tree/main">MATE</a> is a table join search approach.
@@ -249,10 +263,11 @@ Then, start progressive indexing using types within the Docker container:
 ```bash
 WT_ROWS=10956092
 GT_ROWS=67774304
+mkdir -p /data/indexes
 cd src/
 mvn package -DskipTests
 java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop types \
-     --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/ \
+     --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/output/ \
      --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity \
      -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
 ```
@@ -262,6 +277,7 @@ Alternatively, start progressive indexing using embeddings:
 ```bash
 WT_ROWS=10956092
 GT_ROWS=67774304
+mkdir -p /data/indexes
 cd src/
 mvn package -DskipTests
 java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop embeddings --embeddingSimilarityFunction abs_cos \
@@ -291,7 +307,7 @@ The results are stored in `results/discoverability/discovered_times.txt`.
 ### Ranking Quality
 We measure the ranking quality using NDCG during the early stages of progressive indexing.
 This evaluates the ranking quality when the time-to-insight is significantly reduced.
-Specifically, we focus on querying the baselines in the very early stages of progressive indexing.
+Specifically, we focus on querying the baselines in the very early stages of progressive indexing using the same set of queries at every time point.
 
 #### Thetis
 Start progressive indexing in Thetis, as described above, and run immediately the following script to start the experiment.
@@ -326,24 +342,22 @@ do
 done
 ```
 
-Construct then indexes by running the following script within the Thetis Docker container:
+Run the following script to perform searching in Thetis using the fully constructed indexes.
 
 ```bash
-java -Xms25g -jar target/Thetis.0.1.jar index --table-dir /corpus/ \
-     --output-dir /data/indexes/ -t 4 -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
-```
-
-Run the following script to perform searching in Thetis.
-
-```bash
+WT="wikitables"
+GT="gittables"
 RESULT_DIR="/data/ground_truth/"
 mkdir -p ${RESULT_DIR}
 
 java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 100 \
-     -q /queries/ -td /corpus/ -i /data/indexes/ -od ${RESULT_DIR} --embeddingSimilarityFunction abs_cos \
+     -q /queries/ -td /corpus/ -i /data/${WT}_indexes/ -od ${RESULT_DIR} --embeddingSimilarityFunction abs_cos \
      --singleColumnPerQueryEntity --adjustedSimilarity -pf HNSW \
      -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
 ```
+
+Use `${WT}` to use the indexes on the Wikitables and `${GT}` for GitTables.
+Substitute `-prop embeddings` with `-prop types` in case you used types during progressive indexing.
 
 Now, evaluate the ranking using NDCG by running the Python script:
 
@@ -468,7 +482,6 @@ docker run --rm -v ${PWD}/SemanticTableSearchDataset/table_corpus/tables_2019:/w
            -v ${PWD}/gittables:/gittables \
            -v ${PWD}/results:/results \
            chained_ranking bash -c "python3 chained_ndcg.py <OVERLAP_TYPE> <CORPUS_NAME>"
-mv results/chained_ndcg.txt .
 ```
 
-The results are now stored in `chained_ndcg.txt`.
+The results are now stored in `results/chained_ndcg.txt`.
