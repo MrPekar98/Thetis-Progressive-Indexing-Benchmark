@@ -7,7 +7,7 @@ ADD SemanticTableSearchDataset/table_corpus/csv_tables_2019/ /wikitables
 ADD gittables_csv/ /gittables
 
 RUN apt update
-RUN apt install python3 pip wget zip openjdk-11-jdk git -y
+RUN DEBIAN_FRONTEND=noninteractive apt install python3 pip wget zip openjdk-11-jdk git -y
 RUN git clone https://github.com/northeastern-datalab/santos.git
 
 WORKDIR santos/
@@ -23,6 +23,7 @@ RUN wget https://yago-knowledge.org/data/yago4/full/2020-02-24/yago-wd-simple-ty
 RUN gzip -d *.gz
 RUN mv *.nt yago/yago_original/
 
+# Process KG
 WORKDIR codes/
 RUN python3 preprocess_yago.py
 RUN python3 Yago_type_counter.py
@@ -36,7 +37,22 @@ RUN unzip santos_fd.zip
 WORKDIR santos_fd/
 ADD wikitables.txt .
 ADD gittables.txt .
-RUN ./runFilesWT.sh
+ADD santos_fds/ santos_fds/
+
+# Setup FDs
+WORKDIR santos_fds/wikitables/
+RUN unzip *.zip
+RUN rm *.zip
+RUN mv */* .
+RUN rmdir */
+WORKDIR ../gittables/
+RUN unzip *.zip
+RUN rm *.zip
+RUN mv */* .
+RUN rmdir */
+WORKDIR ../../
+
+# Setup for Wikitables
 RUN python3 sortFDs_pickle_file_dict.py wikitables
 RUN mv wikitables_FD_filedict.pickle ..
 RUN python3 gen_union.py /queries/5-row/ /wikitables/ wikitables
@@ -44,7 +60,8 @@ RUN mv wikitablesUnionBenchmark.pickle ..
 RUN python3 gen_intent_columns.py wikitables
 RUN mv wikitablesIntentColumnBenchmark.pickle ..
 RUN rm -r results/ entity_weights.json
-RUN ./runFilesGT.sh
+
+# Setup for GitTables
 RUN python3 sortFDs_pickle_file_dict.py gittables
 RUN mv gittables_FD_filedict.pickle ..
 RUN python3 gen_union.py /queries/5-row/ /gittables/ gittables
@@ -52,12 +69,12 @@ RUN mv gittablesUnionBenchmark.pickle ..
 RUN python3 gen_intent_columns.py gittables
 RUN mv gittablesIntentColumnBenchmark.pickle ..
 
+# Add thbe online-phase code
 WORKDIR /home/santos/codes
-ADD santos.sh .
 RUN rm data_lake_processing_yago.py query_santos.py
+ADD santos.sh .
 ADD baseline_code/santos/santos_data_lake_preprocessing_yago.py .
-ADD baseline_code/santos/query_santos .
+ADD baseline_code/santos/query_santos.py .
 ADD sub_corpus.py .
 
-CMD []
-#ENTRYPOINT ./santos.sh
+ENTRYPOINT ./santos.sh
