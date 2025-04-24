@@ -6,6 +6,9 @@ import math
 import json
 
 def ranking_ndcg(result_file, ground_truth_file, corpus):
+    if not os.path.exists(result_file) or not os.path.exists(ground_truth_file):
+        return None
+
     ground_truth_scores = {table:0 for table in corpus}
     result_scores = {table:0 for table in corpus}
 
@@ -75,7 +78,9 @@ with open('/results/chained_ndcg.txt', 'w') as handle:
             result_file = result_dir + fraction + '/' + result + '/filenameToScore.json'
             gt_file = gt_dir + result + '/filenameToScore.json'
             scores = ranking_ndcg(result_file, gt_file, corpus_files)
-            ndcg = ndcg_score(np.array([scores[1]]), np.array([scores[0]]), k = 100)
-            handle.write(str(ndcg) + '\n')
+
+            if not scores is None:
+                ndcg = ndcg_score(np.array([scores[1]]), np.array([scores[0]]), k = 100)
+                handle.write(str(ndcg) + '\n')
 
         handle.write('\n')
