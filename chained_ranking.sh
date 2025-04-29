@@ -84,6 +84,7 @@ do
     fi
 
     PREV=${CURRENT}
+    CURRENT=${CURRENT%.*}
     mv ${EXP_QUERIES}* ${QUERY_DIR}
     echo "Executing queries in iteration ${ITERATION} after having indexed ${CURRENT}% of the data"
 
