@@ -50,9 +50,9 @@ if __name__ == '__main__':
 
     # Change the data paths to where the benchmarks are stored
     if "wikitables" in hp.task:
-        path = '../SemanticTableSearchDataset/table_corpus/csv_tables_2019'
-    elif "tus" in hp.task:
-        path = 'data/table-union-search-benchmark/small/benchmark'
+        path = '/wikitables'
+    elif "gittables" in hp.task:
+        path = '/gittables'
     else:
         print('Task not recognized')
         exit(1)

@@ -47,5 +47,8 @@ for file in files:
 
                     writer.writerow(tuple)
 
+        except UnicodeDecodeError as e:
+            pass
+
         except json.decoder.JSONDecodeError as e:
             pass
