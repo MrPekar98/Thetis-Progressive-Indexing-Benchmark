@@ -261,7 +261,7 @@ To use GitTables, substitute the variable `${WT}` in the Docker command with `${
 Then, start progressive indexing using types within the Docker container:
 
 ```bash
-WT_ROWS=10956092
+WT_ROWS=9165417
 GT_ROWS=67774304
 mkdir -p /data/indexes
 cd src/
@@ -275,7 +275,7 @@ java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop types \
 Alternatively, start progressive indexing using embeddings:
 
 ```bash
-WT_ROWS=10956092
+WT_ROWS=9165417
 GT_ROWS=67774304
 mkdir -p /data/indexes
 cd src/
@@ -460,13 +460,18 @@ Now, run the following command within the Thetis Docker container to start searc
 ```bash
 WT="../SemanticTableSearchDataset/table_corpus/tables_2019/"
 GT="../gittables/"
+WT_INDEX="wikitables_indexes"
+GT_INDEX="gittables_indexes"
 mkdir -p /data/gt_results/
-java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 100 \
-     -q /queries/ -td /corpus/ -i /data/indexes/ -od /data/gt_results/ \
+java -Xms25g -jar target/Thetis.0.1.jar search -prop types -topK 100 \
+     -q /queries/ -td /corpus/ -i /data/${WT_INDEX}/ -od /data/gt_results/ \
      -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin \
      --singleColumnPerQueryEntity --adjustedSimilarity
 rm /queries/*
 ```
+
+Substitute `${WT_INDEX}` with `${GT_INDEX}` if you used the GitTables corpus.
+Substitute `types` for option `-prop` with `embeddings` if you used embeddedings for entity-centric similarity measurements during progressive indexing.
 
 Outside the container, copy the results to the `results/` directory:
 
