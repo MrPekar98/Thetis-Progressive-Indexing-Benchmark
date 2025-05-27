@@ -189,16 +189,6 @@ import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 ```
 
-### Setting Up SANTOS
-<a href="https://github.com/northeastern-datalab/santos">SANTOS</a> is a semantic table union search approach.
-Setup the SANTOS environment in a Docker image with the following command:
-
-```bash
-docker build -t santos -f santos.dockerfile .
-```
-
-Note that is a lenghty process.
-
 ### Setting Up Starmie
 <a href="https://github.com/megagonlabs/starmie">Starmie</a> is an approach for semantic data discovery based on learned column representations.
 Setup the Starmie environment in a Docker image with the following command:
@@ -368,26 +358,6 @@ python ndcg.py
 ```
 
 The results are now stored in `ndcg.txt`.
-
-#### SANTOS
-We perform an experiment to evaluate the ranking using SANTOS during progressive and adaptive indexing.
-We incrementally add more data to index based on the same priority assignment rules applied in Thetis.
-
-The ranking experiment in SANTOS is already set up in a Docker images.
-To run the experiment, run the Docker container, and pass the fraction of data to index in between query executions, the maximum fraction of data to index before concluding the experiment, pass 1 or 5 for the number of rows for the queries, the name of the corpus to evaluate on (must be either `wikitables` or `gittables`), and whether to use high- or low-overlap queries:
-
-```bash
-mkdir -p santos_results/
-docker run --rm -v ${PWD}/santos_results:/results \
-           -e FRACTION=<insert fraction> \
-           -e FRACTION_LIMIT=<insert limit> \
-           -e QUERY_SIZE=<insert query size> \
-           -e CORPUS=<insert corpus name> \
-           -e OVERLAP=<overlap type> santos
-```
-
-The results can now be found in `santos_results/`.
-Now some plotting...
 
 #### Starmie
 We perform the same experiment in Starmie as with SANTOS, and the experiment is also aldready setup in a Docker images.
