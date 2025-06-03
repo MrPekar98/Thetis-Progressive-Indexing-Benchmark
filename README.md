@@ -224,12 +224,6 @@ docker build -t mate -f mate.dockerfile .
 ```
 
 ## Experiments
-Run the following command to create the set of queries for the experiments, and pass the number of queries you wish to use in the experiments:
-
-```bash
-python gen_queries.py <number of queries>
-```
-
 In an independent window, run a Docker container and start progressively indexing Thetis:
 
 ```bash
@@ -371,7 +365,6 @@ docker run --rm -v ${PWD}/starmie_results:/results \
            -v ${PWD}/queries:/queries \
            -e FRACTION=<insert period> \
            -e FRACTION_LIMIT=<insert limit> \
-           -e QUERY_SIZE=<insert query size> \
            -e CORPUS=<insert corpus name> \
            -e OVERLAP=<overlap type> starmie
 ```
