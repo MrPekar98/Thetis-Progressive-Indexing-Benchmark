@@ -20,7 +20,7 @@ def progress():
     check_str = 'INFO: Indexed'
     line = ''
 
-    while not check_str in line:
+    while True:
         with open(log_file, 'rb') as file:
             file.seek(-2, 2)
 
@@ -29,18 +29,25 @@ def progress():
 
             line = file.readline().decode()
 
-    return float(line.split(' ')[-1].replace('%', ''))
+            if check_str in line:
+                try:
+                    return float(line.split(' ')[-1].replace('%', ''))
+
+                except ValueError:
+                    pass
+
+    return None
 
 def select_result_table(file, index):
     if index < 0:
-        return None
+        return -1
 
     with open(file, 'r') as handle:
         results = json.load(handle)
         i = 0
 
         if index >= len(results['scores']):
-            return None
+            return -1
 
         for result in results['scores']:
             table_id = result['tableID']
@@ -77,7 +84,8 @@ time.sleep(2)
 start = progress()
 current = start
 prev = current
-limit = 30.0
+#limit = 20.0
+limit = 100.0
 iteration = 0
 num_queries = len(os.listdir(initial_queries))
 corpus_dir = '/wikitables/'
@@ -99,7 +107,7 @@ while current < limit:
             os.remove(item)
 
     prev = current
-    current = int(str(current).split('.')[0])
+    current = float(str(current)[0:str(current).index('.') + 2])
     print('Executing queries in iteration ' + str(iteration) + ' after having indexed ' + str(current) + '% of the data')
 
     for item in Path(exp_queries).iterdir():
@@ -115,25 +123,47 @@ while current < limit:
     for item in Path(output_dir).iterdir():
         shutil.move(output_dir + item.name, result_dir + str(current) + '/' + item.name)
 
-    # Constrct new queries
+    # Construct new queries
     for result in os.listdir(result_dir + str(current)):
-        output_file = 'non'
         index = 0
         result_file = result_dir + str(current) + '/' + result + '/filenameToScore.json'
+        table_id = select_result_table(result_file, index)
 
-        while not os.path.exists(output_file):
-            if index == num_queries:
-                break
+        if table_id == -1:	# If the result set is empty
+            if 'wikipage' in result:
+                src = Path(initial_queries) / (result + '.json')
+                dst = Path(exp_queries) / (result + '.json')
+                shutil.copy2(src, dst)
 
+            else:
+                table_file = corpus_dir + result + '.json'
+                output_file = exp_queries + result + '.json'
+                os.system('python3 to_query.py ' + table_file + ' ' + output_file)
+
+            continue
+
+        constructed = False
+        table_file = corpus_dir + table_id
+        output_file = exp_queries + table_id
+
+        if not os.path.exists(output_file):
+            os.system('python3 to_query.py ' + table_file + ' ' + output_file)
+            constructed = os.path.exists(output_file)
+
+        while not constructed:
+            index += 1
             table_id = select_result_table(result_file, index)
 
-            if table_id is None:
-                index += 1
+            if table_id == -1:
                 continue
 
             table_file = corpus_dir + table_id
             output_file = exp_queries + table_id
-            index += 1
+
+            if os.path.exists(output_file):	# If the table has already been selected as query from another query execution
+                continue
+
             os.system('python3 to_query.py ' + table_file + ' ' + output_file)
+            constructed = os.path.exists(output_file)
 
 print('\nDone. Reached indexing limit ' + str(limit) + '.')
