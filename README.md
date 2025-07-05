@@ -189,15 +189,13 @@ import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 ```
 
-### Setting Up Starmie
-<a href="https://github.com/megagonlabs/starmie">Starmie</a> is an approach for semantic data discovery based on learned column representations.
-Setup the Starmie environment in a Docker image with the following command:
+### Setting Up D3L
+<a href="https://github.com/alex-bogatu/d3l">D3L</a> is an approach for dataset discovery.
+Setup the D3L environment in a Docker image with the following command:
 
 ```bash
-docker build -t starmie -f starmie.dockerfile .
+docker build -t d3l -f d3l.dockerfile .
 ```
-
-Note that this is a lengthy process.
 
 ### Setting Up MATE
 <a href="https://github.com/LUH-DBS/MATE/tree/main">MATE</a> is a table join search approach.
@@ -353,23 +351,23 @@ python ndcg.py
 
 The results are now stored in `ndcg.txt`.
 
-#### Starmie
-We perform the same experiment in Starmie as with SANTOS, and the experiment is also aldready setup in a Docker images.
+#### D3L
+We perform the same experiment in D3L as with SANTOS, and the experiment is also aldready setup in a Docker images.
 Run the experiment with the following commands, and pass the fraction of data to index in between query executions, the maximum fraction of data to index before concluding the experiment, the pass 1 or 5 for the number of rows for the queries, the name of the corpus to evaluate on (must be either `wikitables` or `gittables`), and whether to use high- or low-overlap queries:
 
 ```bash
-mkdir -p starmie_results/
-docker run --rm -v ${PWD}/starmie_results:/results \
-           -v  ${PWD}/SemanticTableSearchDataset/table_corpus/csv_tables_2019:/wikitables\
+mkdir -p results/d3l/
+docker run --rm -v ${PWD}/results/d3l:/results \
+           -v ${PWD}/SemanticTableSearchDataset/table_corpus/csv_tables_2019:/wikitables \
            -v ${PWD}/gittables_csv:/gittables \
            -v ${PWD}/queries:/queries \
            -e FRACTION=<insert period> \
            -e FRACTION_LIMIT=<insert limit> \
            -e CORPUS=<insert corpus name> \
-           -e OVERLAP=<overlap type> starmie
+           -e OVERLAP=<overlap type> d3l
 ```
 
-The results can now be found in `starmie_results/`.
+The results can now be found in `d3l_results/`.
 Now some plotting...
 
 #### Chained Ranking
