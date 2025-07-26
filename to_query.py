@@ -21,29 +21,42 @@ def entity_link(link):
 
 # Returns a 2-tuple containing first a list of rows and then a list of columns
 # These coordinates represent a sub-table where all cells contain KG links
-# The implementation is simplified for now: just the largest row
-def coordinates(matrix):
-    largest_row_i = -1
-    i = 0
+def coordinates(table):
+    rows = [i for i in range(len(table))]
     columns = []
+    largest_row = 0
 
-    for row in matrix:
-        tmp_columns = []
-        j = 0
+    for row in table:
+        column_i = 0
+        largest_row = max(largest_row, len(row))
 
         for column in row:
             if len(column['links']) > 0 and not entity_link(column['links'][0]) is None:
-                tmp_columns.append(j)
+                if not column_i in columns:
+                    columns.append(column_i)
 
-            j += 1
+            column_i += 1
 
-        if len(tmp_columns) > len(columns):
-            largest_row_i = i
-            columns = tmp_columns
+    row_i = 0
 
-        i += 1
+    for row in table:
+        column_i = 0
 
-    return [[largest_row_i], columns]
+        if len(row) != largest_row:
+            rows.remove(row_i)
+
+        else:
+            for column in row:
+                if column_i in columns and (len(column['links']) == 0 or (len(column['links']) > 0 and entity_link(column['links'][0]) is None)):
+                    rows.remove(row_i)
+                    break
+
+                column_i += 1
+
+        row_i += 1
+
+    columns = sorted(columns)
+    return [rows, columns]
 
 if len(sys.argv) < 3:
     print('Missing input and output file')

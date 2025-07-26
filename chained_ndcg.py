@@ -42,6 +42,7 @@ if len(sys.argv) < 3:
 
 overlap_type = sys.argv[1]
 corpus = sys.argv[2]
+system = os.getenv('SYSTEM')
 gt_dir = '/results/chained_ground_truth/'
 
 if overlap_type != 'low' and overlap_type != 'high':

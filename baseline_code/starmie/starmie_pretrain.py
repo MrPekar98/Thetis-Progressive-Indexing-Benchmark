@@ -49,10 +49,8 @@ if __name__ == '__main__':
         torch.cuda.manual_seed_all(seed)
 
     # Change the data paths to where the benchmarks are stored
-    if "wikitables" in hp.task:
-        path = '/wikitables'
-    elif "gittables" in hp.task:
-        path = '/gittables'
+    if "wikitables" in hp.task or 'gittables' in hp.task:
+        path = '/index_dir'
     else:
         print('Task not recognized')
         exit(1)

@@ -251,7 +251,7 @@ mvn package -DskipTests
 java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop types \
      --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/output/ \
      --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity \
-     -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
+     -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
 ```
 
 Alternatively, start progressive indexing using embeddings:
@@ -265,7 +265,7 @@ mvn package -DskipTests
 java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop embeddings --embeddingSimilarityFunction abs_cos \
      --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/output/ \
      --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity \
-     -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
+     -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
 ```
 
 Once again, if GitTables are used as the corpus, substitute the variable `${WT_SIZE}` with `${GT_SIZE}`.
@@ -334,7 +334,7 @@ mkdir -p ${RESULT_DIR}
 
 java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 100 \
      -q /queries/ -td /corpus/ -i /data/${WT}_indexes/ -od ${RESULT_DIR} --embeddingSimilarityFunction abs_cos \
-     --singleColumnPerQueryEntity --adjustedSimilarity -pf HNSW \
+     --singleColumnPerQueryEntity --adjustedSimilarity \
      -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
 ```
 
@@ -346,7 +346,7 @@ Now, evaluate the ranking using NDCG by running the Python script:
 ```bash
 mkdir -p results/ground_truth/
 cp -r TableSearch/data/ground_truth/search_output/* results/ground_truth/
-python ndcg.py
+python ndcg.py <CORPUS>
 ```
 
 The results are now stored in `ndcg.txt`.
@@ -367,8 +367,28 @@ docker run --rm -v ${PWD}/results/d3l:/results \
            -e OVERLAP=<overlap type> d3l
 ```
 
-The results can now be found in `d3l_results/`.
-Now some plotting...
+The results can now be found in `results/d3l/ranking/`.
+Now, construct the ground truth:
+
+```bash
+docker run --rm -v ${PWD}/results/d3l:/results \
+           -v ${PWD}/SemanticTableSearchDataset/table_corpus/csv_tables_2019:/wikitables \
+           -v ${PWD}/gittables_csv:/gittables \
+           -v ${PWD}/queries:/queries \
+           -e CORPUS=<insert corpus name> \
+           -e OVERLAP=<overlap type> d3l python search.py
+```
+
+Run the following to evaluate the ranking performance and output the scores at each indexed fraction in `results/d3l/ndcg.txt`:
+
+```bash
+docker run --rm -v ${PWD}/results/d3l:/results \
+           -v ${PWD}/SemanticTableSearchDataset/table_corpus/csv_tables_2019:/wikitables \
+           -v ${PWD}/gittables_csv:/gittables \
+           -e SYSTEM="d3l" \
+           chained_ranking bash -c "python3 chained_ndcg.py <overlap type> <corpus name>"
+python ndcg.py <corpus name> d3l
+```
 
 #### Chained Ranking
 We perform an experiment in Thetis, where we use a top-10 for each query to construct a new query, which we then execute and evaluate its performance.
@@ -449,6 +469,7 @@ Finally, you can run the following command to plot the experiment results:
 docker run --rm -v ${PWD}/SemanticTableSearchDataset/table_corpus/tables_2019:/wikitables \
            -v ${PWD}/gittables:/gittables \
            -v ${PWD}/results:/results \
+           -e SYSTEM="thetis" \
            chained_ranking bash -c "python3 chained_ndcg.py <OVERLAP_TYPE> <CORPUS_NAME>"
 ```
 

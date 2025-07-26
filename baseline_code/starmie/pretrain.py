@@ -157,17 +157,21 @@ def inference_on_tables(tables: List[pd.DataFrame],
         if tid == total - 1 or len(batch) == batch_size:
             # model inference
             with torch.no_grad():
-                x, _, _ = unlabeled.pad(batch)
-                # all column vectors in the batch
-                column_vectors = model.inference(x)
-                ptr = 0
-                for xi in x:
-                    current = []
-                    for token_id in xi:
-                        if token_id == unlabeled.tokenizer.cls_token_id:
-                            current.append(column_vectors[ptr].cpu().numpy())
-                            ptr += 1
-                    results.append(current)
+                try:
+                    x, _, _ = unlabeled.pad(batch)
+                    # all column vectors in the batch
+                    column_vectors = model.inference(x)
+                    ptr = 0
+                    for xi in x:
+                        current = []
+                        for token_id in xi:
+                            if token_id == unlabeled.tokenizer.cls_token_id:
+                                current.append(column_vectors[ptr].cpu().numpy())
+                                ptr += 1
+                        results.append(current)
+
+                except RuntimeError:
+                    continue
 
             batch.clear()
 
@@ -204,11 +208,12 @@ def load_checkpoint(ckpt):
     elif hp.task == "wdc":
         ds_path = 'data/wdc/0'
     elif hp.task == 'wikitables':
-        ds_path = '../SemanticTableSearchDataset/table_corpus/csv_tables_2019'
+        ds_path = '/wikitables'
+    elif hp.task == 'gittables':
+        ds_path = '/gittables'
     dataset = PretrainTableDataset.from_hp(ds_path, hp)
 
     return model, dataset
-
 
 def evaluate_pretrain(model: BarlowTwinsSimCLR,
                       unlabeled: PretrainTableDataset):

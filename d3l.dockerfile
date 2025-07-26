@@ -9,4 +9,4 @@ ADD baseline_code/d3l/ .
 ADD baseline_code/experiment/ .
 ADD d3l.sh .
 
-ENTRYPOINT ./d3l.sh
+CMD ./d3l.sh

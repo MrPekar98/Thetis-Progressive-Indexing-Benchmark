@@ -1,0 +1,8 @@
+pandas
+SQLAlchemy
+mmh3
+numpy
+scipy
+nltk
+scikit-learn
+tqdm

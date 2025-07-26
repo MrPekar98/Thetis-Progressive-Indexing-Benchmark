@@ -59,6 +59,11 @@ def select_result_table(file, index):
 
     return None
 
+def is_empty(file):
+    with open(file, 'r') as handle:
+        query = json.load(handle)
+        return len(query['queries']) == 0
+
 if type != 'low' and type != 'high':
     print('Type must be either \'low\' or \'high\'')
     exit(1)
@@ -84,8 +89,7 @@ time.sleep(2)
 start = progress()
 current = start
 prev = current
-#limit = 20.0
-limit = 100.0
+limit = 20.0
 iteration = 0
 num_queries = len(os.listdir(initial_queries))
 corpus_dir = '/wikitables/'
@@ -148,7 +152,7 @@ while current < limit:
 
         if not os.path.exists(output_file):
             os.system('python3 to_query.py ' + table_file + ' ' + output_file)
-            constructed = os.path.exists(output_file)
+            constructed = os.path.exists(output_file) and not is_empty(output_file)
 
         while not constructed:
             index += 1
@@ -164,6 +168,6 @@ while current < limit:
                 continue
 
             os.system('python3 to_query.py ' + table_file + ' ' + output_file)
-            constructed = os.path.exists(output_file)
+            constructed = os.path.exists(output_file) and not is_empty(output_file)
 
 print('\nDone. Reached indexing limit ' + str(limit) + '.')

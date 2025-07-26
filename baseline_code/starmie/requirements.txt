@@ -12,3 +12,6 @@ tqdm==4.41.0
 transformers==4.9.2
 mlflow
 xgboost
+munkres==1.1.4
+iteration-utilities==0.13.0
+pickle5

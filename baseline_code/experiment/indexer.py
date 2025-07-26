@@ -1,4 +1,4 @@
-from mlfq import Mlfq
+from probabilistic_mlfq import ProbabilisticMlfq
 import os
 import random
 import csv
@@ -10,7 +10,7 @@ total_rows = -1
 def index(percentage, corpus, index_dir):
     global indexed_rows
     global total_rows
-    mlfq = Mlfq()
+    mlfq = ProbabilisticMlfq()
 
     if mlfq.size() == 0:
         print('Adding tables to MLFQ')
