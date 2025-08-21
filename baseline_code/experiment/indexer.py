@@ -21,14 +21,10 @@ def index(percentage, corpus, index_dir):
         print('There\'s a total of ' + str(total_rows) + ' rows to index')
 
     rows_to_index = int(math.ceil((percentage / 100) * total_rows))
-    progress = 0
     print('Indexing ' + str(rows_to_index) + ' rows')
 
     for i in range(rows_to_index):
         table_id = mlfq.poll()
-        print(' ' * 100, end = '\r')
-        print('Progress: ' + str((progress / rows_to_index) * 100)[:5] + '%', end = '\r')
-        progress += 1
 
         if table_id is None:
             print('MLFQ is empty')

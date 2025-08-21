@@ -41,19 +41,19 @@ class ProbabilisticMlfq:
         prop = random.randint(0, 100)
         threshold = 50
 
-        for i in range(self.__levels):
+        for i in range(1, self.__levels):
             if prop >= threshold:
                 return i
 
             threshold /= 2
 
-        return self.__levels - 1
+        return self.__levels
 
     def poll(self):
         if self.size() == 0:
             return None
 
-        level = self.__prop_select_queue() + 1
+        level = self.__prop_select_queue()
 
         while len(self.__mlfq['levels'][str(level)]) == 0:
             level = self.__prop_select_queue()

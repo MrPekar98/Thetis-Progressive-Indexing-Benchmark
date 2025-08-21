@@ -1,10 +1,12 @@
+# Parse error after indexing 6602 tables in the format index
+
 import sys
 import os
 import shutil
 import json
 import indexer
-from mlfq import Mlfq
 from statistics import mean
+import time
 
 import numpy as np
 from d3l.indexing.similarity_indexes import NameIndex, FormatIndex, ValueIndex, EmbeddingIndex, DistributionIndex
@@ -12,7 +14,17 @@ from d3l.input_output.dataloaders import CSVDataLoader
 from d3l.querying.query_engine import QueryEngine
 from d3l.utils.functions import pickle_python_object, unpickle_python_object
 
-mlfq = Mlfq()
+import pandas as pd
+from tqdm import tqdm
+
+def clean_dirty_tables(dataloader, index_dir):
+    for table in tqdm(dataloader.get_tables()):
+        try:
+            dataloader.read_table(table_name = table)
+
+        except pd.errors.ParserError:
+            os.remove(index_dir + '/' + table + '.csv')
+
 index_dir = '/index_dir'
 indexed = 0.0
 fraction = float(sys.argv[1])
@@ -20,26 +32,34 @@ limit = float(sys.argv[2])
 task = sys.argv[3]
 corpus = '/' + task
 query_dir = '/queries/' + sys.argv[4] + '_overlap_csv/'
-result_dir = '/results/ranking/'
+exp_query_dir = '/exp_queries/'
+result_dir = '/results/chained_ranking/'
 internal_indexes = '/indexes'
 os.mkdir(internal_indexes)
 os.mkdir(index_dir)
+os.mkdir(exp_query_dir)
 
 if not os.path.exists(result_dir):
     os.mkdir(result_dir)
+
+initial_queries = os.listdir(query_dir)
+
+for query in initial_queries:
+    shutil.copy(query_dir + query, exp_query_dir + query)
 
 while indexed < limit:
     indexed += fraction
     print('Colleting data to index at ' + str(indexed) + '%')
     indexer.index(indexed, corpus, index_dir)
-
     print('Indexing')
 
     dataloader = CSVDataLoader(
         root_path = index_dir,
         sep = ','
     )
+    clean_dirty_tables(dataloader, index_dir)
 
+    start_time = time.time()
     name_index = NameIndex(dataloader = dataloader)
     pickle_python_object(name_index, internal_indexes + '/name.lsh')
     print("Name index: finished!")
@@ -56,24 +76,39 @@ while indexed < limit:
     pickle_python_object(embedding_index, internal_indexes + '/embedding.lsh')
     print("Embedding: finished!")
 
+    duration = time.time() - start_time
+    print('Spent ' + str(duration) + 's indexing')
     print('Querying D3L')
 
     qe = QueryEngine(name_index, format_index, value_index, embedding_index)
-    queries = os.listdir(query_dir)
+    queries = os.listdir(exp_query_dir)
     os.mkdir(result_dir + str(indexed))
 
     for query in queries:
-        shutil.copy(query_dir + query, index_dir + '/' + query)
+        shutil.copy(exp_query_dir + query, index_dir + '/' + query)
 
         query_id = query.replace('.csv', '')
         query_table = dataloader.read_table(table_name = query_id)
         results, extended_results = qe.table_query(table = query_table, aggregator = lambda scores: mean(scores), k = 100, verbose = True)
         res_dict = {'scores': []}
+        os.remove(exp_query_dir + query)
+        os.remove(index_dir + '/' + query)
+
+        result_table = results[0][0].split('.')[0] + '.csv'
+        result_i = 0
+
+        while not os.path.exists(corpus + '/' + result_table) and result_i < len(results):
+            result_i += 1
+            result_table = results[result_i][0].split('.')[0] + '.csv'
+
+        shutil.copy(corpus + '/' + result_table, exp_query_dir + result_table)
 
         for result in results:
             res_dict['scores'].append({'tableID': result[0], 'score': result[1]})
 
         with open(result_dir + str(indexed) + '/' + query_id + '.json', 'w') as handle:
             json.dump(res_dict, handle)
+
+    print()
 
 print('Done')

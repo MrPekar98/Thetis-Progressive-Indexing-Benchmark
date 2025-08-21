@@ -12,7 +12,6 @@ from d3l.input_output.dataloaders import CSVDataLoader
 from d3l.querying.query_engine import QueryEngine
 from d3l.utils.functions import pickle_python_object, unpickle_python_object
 
-mlfq = Mlfq()
 index_dir = '/index_dir'
 indexed = 0.0
 fraction = float(sys.argv[1])

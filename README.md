@@ -189,6 +189,14 @@ import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 ```
 
+### Setting Up SANTOS
+<a href="https://github.com/northeastern-datalab/santos">SANTOS</a> is a table union search approach.
+Build the SANTOS Docker container in which we will run the experiments for this approach using the following command:
+
+```bash
+docker build -t santos -f santos.dockerfile .
+```
+
 ### Setting Up D3L
 <a href="https://github.com/alex-bogatu/d3l">D3L</a> is an approach for dataset discovery.
 Setup the D3L environment in a Docker image with the following command:
@@ -351,6 +359,30 @@ python ndcg.py <CORPUS>
 
 The results are now stored in `ndcg.txt`.
 
+#### SANTOS
+We now run the ranking experiments in SANTOS.
+Use the following commands:
+
+```bash
+mkdir -p results/santos/
+docker run --rm -v ${PWD}/results/d3l:/results \
+           -e FRACTION=<insert period> \
+           -e FRACTION_LIMIT=<insert limit> \
+           -e CORPUS=<insert corpus name> \
+           -e OVERLAP=<overlap type> d3l
+```
+
+This Docker command also runs the other experiments, such as the chained ranking experiment, which is described later in this document.
+The results are now in `results/santos/ranking/`.
+
+Now some instructions on generating the ground truth...
+
+Run the following command to evaluate the ranking performance at each index fraction, and the NDCG scores are stored in `results/d3l/ndcg.txt`:
+
+```bash
+python ndcg.py <corpus name> santos
+```
+
 #### D3L
 We perform the same experiment in D3L as with SANTOS, and the experiment is also aldready setup in a Docker images.
 Run the experiment with the following commands, and pass the fraction of data to index in between query executions, the maximum fraction of data to index before concluding the experiment, the pass 1 or 5 for the number of rows for the queries, the name of the corpus to evaluate on (must be either `wikitables` or `gittables`), and whether to use high- or low-overlap queries:
@@ -367,6 +399,7 @@ docker run --rm -v ${PWD}/results/d3l:/results \
            -e OVERLAP=<overlap type> d3l
 ```
 
+This will also run all the other types of experiments, such as the chained ranking experiment in the following sub-section.
 The results can now be found in `results/d3l/ranking/`.
 Now, construct the ground truth:
 
@@ -382,11 +415,6 @@ docker run --rm -v ${PWD}/results/d3l:/results \
 Run the following to evaluate the ranking performance and output the scores at each indexed fraction in `results/d3l/ndcg.txt`:
 
 ```bash
-docker run --rm -v ${PWD}/results/d3l:/results \
-           -v ${PWD}/SemanticTableSearchDataset/table_corpus/csv_tables_2019:/wikitables \
-           -v ${PWD}/gittables_csv:/gittables \
-           -e SYSTEM="d3l" \
-           chained_ranking bash -c "python3 chained_ndcg.py <overlap type> <corpus name>"
 python ndcg.py <corpus name> d3l
 ```
 
@@ -474,3 +502,9 @@ docker run --rm -v ${PWD}/SemanticTableSearchDataset/table_corpus/tables_2019:/w
 ```
 
 The results are now stored in `results/chained_ndcg.txt`.
+
+#### D3L And SANTOS
+The previous commands to run the D3L and SANTOS experiments also runs the chained ranking experiment for D3L and SANTOS.
+The results of this experiment are in `results/d3l/chained_ranking/` and `results/santos/chained_ranking/`.
+
+Construct the ground truth queries

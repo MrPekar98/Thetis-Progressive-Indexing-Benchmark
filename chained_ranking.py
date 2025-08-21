@@ -31,7 +31,10 @@ def progress():
 
             if check_str in line:
                 try:
-                    return float(line.split(' ')[-1].replace('%', ''))
+                    value = float(line.split(' ')[-1].replace('%', ''))
+
+                    if value <= 100.0:
+                        return value
 
                 except ValueError:
                     pass
@@ -152,7 +155,11 @@ while current < limit:
 
         if not os.path.exists(output_file):
             os.system('python3 to_query.py ' + table_file + ' ' + output_file)
-            constructed = os.path.exists(output_file) and not is_empty(output_file)
+
+            if os.path.exists(output_file) and is_empty(output_file):
+                os.remove(output_file)
+
+            constructed = os.path.exists(output_file)
 
         while not constructed:
             index += 1
@@ -168,6 +175,10 @@ while current < limit:
                 continue
 
             os.system('python3 to_query.py ' + table_file + ' ' + output_file)
+
+            if os.path.exists(output_file) and is_empty(output_file):
+                os.remove(output_file)
+
             constructed = os.path.exists(output_file) and not is_empty(output_file)
 
 print('\nDone. Reached indexing limit ' + str(limit) + '.')

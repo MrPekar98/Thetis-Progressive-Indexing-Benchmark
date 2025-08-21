@@ -58,6 +58,9 @@ else:
 
 result_dir = '/results/chained_ranking_' + overlap_type + '_overlap/'
 
+if system == 'd3l':
+    result_dir = '/results/ranking/'
+
 if not os.path.exists(result_dir):
     print('Result directory \'' + result_dir + '\' does not exist')
     exit(1)
@@ -78,6 +81,11 @@ with open('/results/chained_ndcg.txt', 'w') as handle:
         for result in query_results:
             result_file = result_dir + fraction + '/' + result + '/filenameToScore.json'
             gt_file = gt_dir + result + '/filenameToScore.json'
+
+            if system == 'd3l':
+                result_file = result_dir + fraction + '/' + result
+                gt_file = gt_dir + result
+
             scores = ranking_ndcg(result_file, gt_file, corpus_files)
 
             if not scores is None:
