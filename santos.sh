@@ -2,11 +2,11 @@
 
 set -e
 
-echo "Ranking experiment"
-python ranking.py ${FRACTION} ${FRACTION_LIMIT} ${CORPUS} ${OVERLAP}
+#echo "Ranking experiment"
+#python3 ranking.py ${FRACTION} ${FRACTION_LIMIT} ${CORPUS} ${OVERLAP}
 
 echo "Chained ranking experiment"
-python chained_ranking.py ${FRACTION} ${FRACTION_LIMIT} ${CORPUS} ${OVERLAP}
+python3 chained_ranking.py ${FRACTION} ${FRACTION_LIMIT} ${CORPUS} ${OVERLAP}
 
 echo
 echo "Done"

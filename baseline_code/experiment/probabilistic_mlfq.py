@@ -68,7 +68,7 @@ class ProbabilisticMlfq:
 
     def move_table(self, table, new_level):
         if new_level <= 0 or new_level > self.__levels:
-            raise 'New level is out of range'
+            raise Exception('New level ' + str(new_level) + ' is out of range')
 
         for level in range(1, self.__levels + 1):
             if table in self.__mlfq['levels'][str(level)]:

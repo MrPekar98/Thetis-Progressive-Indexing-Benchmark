@@ -258,7 +258,7 @@ cd src/
 mvn package -DskipTests
 java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop types \
      --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/output/ \
-     --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity \
+     --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
      -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
 ```
 
@@ -272,7 +272,7 @@ cd src/
 mvn package -DskipTests
 java -Xms25g -jar target/Thetis.0.1.jar progressive -topK 100 -prop embeddings --embeddingSimilarityFunction abs_cos \
      --table-dir /corpus/ --output-dir /data/indexes/ --result-dir /data/output/ \
-     --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity \
+     --indexing-time 0 --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
      -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin -tr ${WT_ROWS}
 ```
 
@@ -342,7 +342,7 @@ mkdir -p ${RESULT_DIR}
 
 java -Xms25g -jar target/Thetis.0.1.jar search -prop embeddings -topK 100 \
      -q /queries/ -td /corpus/ -i /data/${WT}_indexes/ -od ${RESULT_DIR} --embeddingSimilarityFunction abs_cos \
-     --singleColumnPerQueryEntity --adjustedSimilarity \
+     --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn \
      -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin
 ```
 
@@ -365,11 +365,12 @@ Use the following commands:
 
 ```bash
 mkdir -p results/santos/
-docker run --rm -v ${PWD}/results/d3l:/results \
+docker run --rm -v ${PWD}/results/santos/:/results \
+           -v ${PWD}/queries/:/queries \
            -e FRACTION=<insert period> \
            -e FRACTION_LIMIT=<insert limit> \
            -e CORPUS=<insert corpus name> \
-           -e OVERLAP=<overlap type> d3l
+           -e OVERLAP=<overlap type> santos
 ```
 
 This Docker command also runs the other experiments, such as the chained ranking experiment, which is described later in this document.
@@ -477,7 +478,7 @@ mkdir -p /data/gt_results/
 java -Xms25g -jar target/Thetis.0.1.jar search -prop types -topK 100 \
      -q /queries/ -td /corpus/ -i /data/${WT_INDEX}/ -od /data/gt_results/ \
      -pf HNSW -nuri "bolt://${NEO4J_HOST}:7687" -nuser neo4j -npassword admin \
-     --singleColumnPerQueryEntity --adjustedSimilarity
+     --singleColumnPerQueryEntity --adjustedSimilarity --useMaxSimilarityPerColumn
 rm /queries/*
 ```
 

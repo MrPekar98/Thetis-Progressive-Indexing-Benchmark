@@ -323,6 +323,7 @@ if __name__ == "__main__":
     current_benchmark = sys.argv[1]
     query_dir = sys.argv[2]
     overlap = sys.argv[3]
+    result_dir = sys.argv[4]
     map_k = 100
 
     which_mode = 3
@@ -356,7 +357,7 @@ if __name__ == "__main__":
     SYNTH_RELATION_INVERTED_INDEX_PATH = r"../hashmap/" + current_benchmark + "_synth_relation_inverted_index."+pickle_extension
     
     MAP_PATH = r"../stats/" + current_benchmark + "_benchmark_result_by_santos_"+current_mode+".csv"
-    FINAL_RESULT_PICKLE_PATH = r"../stats/" + current_benchmark + "_benchmark_result_by_santos_"+current_mode+".pickle"
+    FINAL_RESULT_PICKLE_PATH = r"/results/" + current_benchmark + "_benchmark_result_by_santos/"+result_dir+"/results.pickle"
     
     TRUE_RESULTS_PATH = r"../stats/" + current_benchmark + "_benchmark_true_result_by_santos_"+current_mode+".csv"
     FALSE_RESULTS_PATH = r"../stats/" + current_benchmark + "_benchmark_false_result_by_santos_"+current_mode+".csv"
@@ -516,9 +517,9 @@ if __name__ == "__main__":
                         synth_query_table_triples[synthetic_triple_name] = (synthetic_triple_score, key)
         query_table_triples = set(query_table_triples.items())
         synth_query_table_triples = set(synth_query_table_triples.items())
-       
+
         total_triples = len(query_table_triples)
-        
+
         table_count_final = {}
         eliminate_less_matching_tables = {}
         tables_containing_intent_column = {}
@@ -527,9 +528,8 @@ if __name__ == "__main__":
           intent_containing_tables = yago_inverted_index[subject_semantics+"-c"]
           for table_tuple in intent_containing_tables:
             tables_containing_intent_column[table_tuple[0]] = 1
-        
-        
-        already_used_column = {}   
+
+        already_used_column = {}
         for item in query_table_triples:
             matching_tables = main_index_triples.get(item[0], "None") #checks yago inv4erted index
             if matching_tables != "None":
@@ -605,25 +605,23 @@ if __name__ == "__main__":
                                 current_score = dlt_col1_contents[each_key] * query_col2_contents[each_key]
                                 if current_score > max_score[1]:
                                     max_score[1] = current_score
-                        
+
                         match_keys_21 = dlt_col2_contents.keys() & query_col1_contents.keys()
-                        
+
                         if len(match_keys_21) > 0:
                             for each_key in match_keys_21:
                                 current_score = dlt_col2_contents[each_key] * query_col1_contents[each_key]
                                 if current_score > max_score[2]:
                                     max_score[2] = current_score
-                        
+
                         match_keys_22 = dlt_col2_contents.keys() & query_col2_contents.keys()
-                        
-                        
+
                         if len(match_keys_22) > 0:
                             for each_key in match_keys_22:
                                 current_score = dlt_col2_contents[each_key] * query_col2_contents[each_key]
                                 if current_score > max_score[3]:
                                     max_score[3] = current_score
-                        
-                        
+
                         max_score = sorted(max_score, reverse = True)
                         synth_col_scores[col_pairs +"-"+dlt_col1 + "-"+ dlt_col2] = max_score[0] * max_score[1]    
                         total_score = query_rel_score * dlt_rel_score * max_score[0] * max_score[1]
@@ -700,18 +698,5 @@ if __name__ == "__main__":
     computation_end_time = time.time()
     difference = int(computation_end_time - computation_start_time)
     print("Time taken to process all query tables and print the results in seconds:", difference)
+
 genFunc.saveDictionaryAsPickleFile(map_output_dict, FINAL_RESULT_PICKLE_PATH)
-
-
-if which_benchmark != 3: #manual verification for real data lake benchmark
-    with open(TRUE_RESULTS_PATH,"w",newline='', encoding="utf-8") as f:
-        w = csv.writer(f)
-        for k, v in true_output_dict.items():
-            for value in v:
-                w.writerow([k,value])
-
-    with open(FALSE_RESULTS_PATH,"w",newline='', encoding="utf-8") as f:
-        w = csv.writer(f)
-        for k, v in false_output_dict.items():
-            for value in v:
-                w.writerow([k,value])

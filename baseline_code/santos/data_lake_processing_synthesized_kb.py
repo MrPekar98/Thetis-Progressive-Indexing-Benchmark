@@ -314,7 +314,6 @@ def createRelationSemanticsSynthKB(lookupTable, filenames, FDDs):
     synthInvertedIndex = convertSynthInvIndexToList(synthInvertedIndex)
     return synthKB, synthInvertedIndex        
 
-    
 if __name__ == "__main__":
     current_benchmark = sys.argv[2]
     table_dir = sys.argv[1]

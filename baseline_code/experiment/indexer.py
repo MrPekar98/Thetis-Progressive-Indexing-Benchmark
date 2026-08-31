@@ -7,7 +7,7 @@ import math
 indexed_rows = dict()
 total_rows = -1
 
-def index(percentage, corpus, index_dir):
+def index(percentage, corpus, index_dir, priority_boosts = dict()):
     global indexed_rows
     global total_rows
     mlfq = ProbabilisticMlfq()
@@ -19,6 +19,15 @@ def index(percentage, corpus, index_dir):
     if total_rows == -1:
         total_rows = row_count(corpus)
         print('There\'s a total of ' + str(total_rows) + ' rows to index')
+
+    if len(priority_boosts) > 0:
+        for table in priority_boosts.keys():
+            current_level = mlfq.level_of(table)
+
+            if current_level != -1:
+                if not mlfq.move_table(table, max(1, current_level - priority_boosts[table])):
+                    print('Table \'' + table + '\' cannot be moved in the MLFQ, as it does not exist')
+                    exit(1)
 
     rows_to_index = int(math.ceil((percentage / 100) * total_rows))
     print('Indexing ' + str(rows_to_index) + ' rows')
